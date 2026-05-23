@@ -815,18 +815,22 @@ body {
   transition: var(--transition-smooth);
 }
 
-.nav-btn:hover {
-  color: var(--text-primary);
+@media (hover: hover) {
+  .nav-btn:hover {
+    color: var(--text-primary);
+  }
 }
 
 .nav-icon {
   font-size: 20px;
+  pointer-events: none; /* Evita que el span capture el touch en móviles, pasándolo al botón padre */
 }
 
 .nav-label {
   font-size: 10px;
   font-weight: 500;
   font-family: var(--font-header);
+  pointer-events: none; /* Evita que el span capture el touch en móviles, pasándolo al botón padre */
 }
 
 .nav-active {
