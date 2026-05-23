@@ -765,91 +765,144 @@ class MetarGauges {
 
     // Flecha de viento / Calcetín de viento
     if (direction !== null && speed !== null) {
-      const angleRad = (direction - 90) * Math.PI / 180;
-
-      // 1. Dibujar la flecha apuntando DESDE donde viene el viento hacia el centro
-      // El viento viene desde el ángulo indicado y viaja al opuesto
-      const fromX = cx + Math.cos(angleRad) * (radius - 30);
-      const fromY = cy + Math.sin(angleRad) * (radius - 30);
-
-      // Dibujar flecha indicadora
-      ctx.strokeStyle = "#1d4ed8";
-      ctx.fillStyle = "#1d4ed8";
-      ctx.lineWidth = 3.5;
-
-      ctx.beginPath();
-      ctx.moveTo(fromX, fromY);
-      ctx.lineTo(cx, cy);
-      ctx.stroke();
-
-      // Cabeza de la flecha en el centro
-      const arrowSize = 10;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(angleRad + 2.5) * arrowSize, cy + Math.sin(angleRad + 2.5) * arrowSize);
-      ctx.lineTo(cx + Math.cos(angleRad - 2.5) * arrowSize, cy + Math.sin(angleRad - 2.5) * arrowSize);
-      ctx.closePath();
-      ctx.fill();
-
-      // 2. Dibujar manga de viento animada en la dirección opuesta al viento
-      const windSockAngle = (direction + 90) * Math.PI / 180; // Apunta hacia adelante
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(windSockAngle);
-
-      // Dibujar poste de la manga
-      ctx.strokeStyle = "#475569";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, -25);
-      ctx.stroke();
-
-      // Aro de soporte de la manga
-      ctx.fillStyle = "#0f172a";
-      ctx.beginPath();
-      ctx.arc(0, -25, 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Manga de viento inflada según velocidad del viento
-      // A más nudos, más horizontal. 0 KT = caída total. >= 15 KT = 100% horizontal.
-      const factor = Math.min(1.0, speed / 15);
-      const droop = (1.0 - factor) * 20; // Caída de la manga
-      const len = 35; // Largo
-
-      ctx.lineWidth = 1;
-
-      // Dibujar 4 franjas rojas y blancas de la manga de viento
-      const segments = [
-        { color: "#dc2626", w1: 8, w2: 7, l: 0 },
-        { color: "#ffffff", w1: 7, w2: 6, l: segmentLength(1) },
-        { color: "#dc2626", w1: 6, w2: 5, l: segmentLength(2) },
-        { color: "#ffffff", w1: 5, w2: 3, l: segmentLength(3) }
-      ];
-
-      function segmentLength(i) { return (len / 4) * i; }
-
-      ctx.beginPath();
-
-      // Dibujar segmentos con distorsión por caída (droop)
-      segments.forEach((seg, index) => {
-        const x1 = index * (len / 4);
-        const y1 = -25 + (droop * Math.pow(index / 4, 2));
-        const x2 = (index + 1) * (len / 4);
-        const y2 = -25 + (droop * Math.pow((index + 1) / 4, 2));
-
-        ctx.fillStyle = seg.color;
+      const isVariable = direction === "VRB" || isNaN(direction);
+      
+      if (!isVariable) {
+        const dirNum = parseFloat(direction);
+        const angleRad = (dirNum - 90) * Math.PI / 180;
+        
+        // 1. Dibujar flecha indicadora elegante en el anillo exterior apuntando hacia el centro (de dónde viene el viento)
+        const px = cx + Math.cos(angleRad) * radius;
+        const py = cy + Math.sin(angleRad) * radius;
+        
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(angleRad + Math.PI); // Apunta hacia el centro
+        
+        ctx.fillStyle = "#1d4ed8";
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(x1, y1 - seg.w1);
-        ctx.lineTo(x2, y2 - seg.w2);
-        ctx.lineTo(x2, y2 + seg.w2);
-        ctx.lineTo(x1, y1 + seg.w1);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-12, -7);
+        ctx.lineTo(-8, 0);
+        ctx.lineTo(-12, 7);
         ctx.closePath();
         ctx.fill();
-      });
+        ctx.stroke();
+        ctx.restore();
 
-      ctx.restore();
+        // 2. Dibujar manga de viento animada en el centro (fiel a la física)
+        // Poste vertical fijo en el centro
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 15);
+        ctx.lineTo(cx, cy - 20);
+        ctx.stroke();
+
+        // Soporte de pivote superior fijo
+        ctx.fillStyle = "#334155";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 20, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Manga de viento rotando sobre el soporte (apunta hacia donde VA el viento)
+        const targetAngleRad = angleRad + Math.PI;
+        
+        ctx.save();
+        ctx.translate(cx, cy - 20);
+        ctx.rotate(targetAngleRad);
+        
+        // Anillo giratorio de la manga
+        ctx.fillStyle = "#0f172a";
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Manga inflada según nudos
+        const factor = Math.min(1.0, speed / 15);
+        const droop = (1.0 - factor) * 18; // Caída de la manga
+        const len = 35;
+        
+        const segments = [
+          { color: "#dc2626", w1: 8, w2: 7 },
+          { color: "#ffffff", w1: 7, w2: 6 },
+          { color: "#dc2626", w1: 6, w2: 5 },
+          { color: "#ffffff", w1: 5, w2: 3 }
+        ];
+        
+        segments.forEach((seg, index) => {
+          const x1 = index * (len / 4);
+          const y1 = droop * Math.pow(index / 4, 2);
+          const x2 = (index + 1) * (len / 4);
+          const y2 = droop * Math.pow((index + 1) / 4, 2);
+          
+          ctx.fillStyle = seg.color;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1 - seg.w1);
+          ctx.lineTo(x2, y2 - seg.w2);
+          ctx.lineTo(x2, y2 + seg.w2);
+          ctx.lineTo(x1, y1 + seg.w1);
+          ctx.closePath();
+          ctx.fill();
+        });
+        
+        ctx.restore();
+      } else {
+        // Viento Variable: No hay dirección fija
+        // Dibujar el mástil y la manga colgando verticalmente
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 15);
+        ctx.lineTo(cx, cy - 20);
+        ctx.stroke();
+
+        ctx.fillStyle = "#334155";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 20, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(cx, cy - 20);
+        ctx.rotate(Math.PI / 2); // Cuelga hacia abajo
+        
+        ctx.fillStyle = "#0f172a";
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        const droop = 20; // Caída total
+        const len = 30;
+        
+        const segments = [
+          { color: "#dc2626", w1: 8, w2: 7 },
+          { color: "#ffffff", w1: 7, w2: 6 },
+          { color: "#dc2626", w1: 6, w2: 5 },
+          { color: "#ffffff", w1: 5, w2: 3 }
+        ];
+        
+        segments.forEach((seg, index) => {
+          const x1 = index * (len / 4);
+          const y1 = droop * Math.pow(index / 4, 2);
+          const x2 = (index + 1) * (len / 4);
+          const y2 = droop * Math.pow((index + 1) / 4, 2);
+          
+          ctx.fillStyle = seg.color;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1 - seg.w1);
+          ctx.lineTo(x2, y2 - seg.w2);
+          ctx.lineTo(x2, y2 + seg.w2);
+          ctx.lineTo(x1, y1 + seg.w1);
+          ctx.closePath();
+          ctx.fill();
+        });
+        
+        ctx.restore();
+      }
 
       // Texto de información en el centro inferior
       ctx.fillStyle = "#0f172a";
