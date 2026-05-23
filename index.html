@@ -46,7 +46,7 @@
             <span>🗺️</span> Por Región FIR
           </button>
           <button id="mode-manual-btn" class="mode-btn" type="button">
-            <span>✍️</span> Ingreso Manual / Reporte
+            <span>✍️</span> Ingreso Manual
           </button>
         </div>
 
@@ -67,20 +67,17 @@
           </div>
         </div>
 
-        <!-- Opción B: Ingreso Manual o Consulta Directa (Oculta al inicio) -->
+        <!-- Opción B: Ingreso Manual (Oculta al inicio) -->
         <div id="mode-manual-container" class="selector-group hidden-element">
           <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
-            Ingresa un código OACI de 4 letras para consultar NOAA, o pega un reporte METAR completo para decodificarlo:
+            Pega un reporte METAR completo para decodificarlo:
           </p>
           <textarea id="metar-manual-input" class="styled-textarea" style="height: 80px;"
-            placeholder="Ej: SABE o pega un reporte METAR completo..."></textarea>
-          
+            placeholder="Pega tu reporte METAR completo aquí..."></textarea>
+
           <div style="display: flex; gap: 8px; margin-top: 4px;">
-            <button id="live-fetch-btn" class="btn-primary" style="flex: 1;" title="Consultar METAR en tiempo real de NOAA">
-              <span>📡</span> Consultar NOAA
-            </button>
-            <button id="decode-btn" class="btn-secondary" style="flex: 1;">
-              🔍 Decodificar Manual
+            <button id="decode-btn" class="btn-primary" style="flex: 1;">
+              🔍 Decodificar METAR
             </button>
           </div>
         </div>

@@ -122,7 +122,7 @@ class MetarParser {
     // Normalizar texto
     const raw = metarText.trim().replace(/\s+/g, " ").replace(/=$/, "");
     const tokens = raw.split(" ");
-    
+
     let result = {
       raw: raw,
       type: "METAR",
@@ -143,7 +143,7 @@ class MetarParser {
     };
 
     let idx = 0;
-    
+
     tokens.forEach((token, tIdx) => {
       let decodedText = "";
       let title = "Código";
@@ -158,7 +158,7 @@ class MetarParser {
         title = "Tipo de Reporte";
         isMatched = true;
       }
-      
+
       // 2. Identificador de Estación (ICAO - 4 Letras comenzando con S o K o C, etc.)
       else if (!result.station && /^[A-Z]{4}$/.test(token)) {
         result.station = token;
@@ -167,7 +167,7 @@ class MetarParser {
         title = "Estación";
         isMatched = true;
       }
-      
+
       // 3. Fecha y Hora (DDHHMMZ)
       else if (!result.dateTime && /^\d{6}Z$/.test(token)) {
         const day = token.substring(0, 2);
@@ -178,7 +178,7 @@ class MetarParser {
         title = "Fecha y Hora";
         isMatched = true;
       }
-      
+
       // 4. AUTO o COR
       else if (token === "AUTO" || token === "COR") {
         if (token === "AUTO") {
@@ -192,7 +192,7 @@ class MetarParser {
         }
         isMatched = true;
       }
-      
+
       // 5. Viento (Dirección, velocidad, ráfagas, variabilidad)
       // Patrones: 18010KT, 23015G25KT, VRB02KT, 180V240
       else if (!result.wind && (/^\d{5}(G\d{2})?KT$/.test(token) || /^VRB\d{2}KT$/.test(token) || /^\d{3}V\d{3}$/.test(token))) {
@@ -205,7 +205,7 @@ class MetarParser {
           const dirStr = token.substring(0, 3);
           const isVrb = dirStr === "VRB";
           const speed = parseInt(token.substring(3, 5));
-          
+
           let gusts = null;
           let gustIdx = token.indexOf("G");
           if (gustIdx !== -1) {
@@ -220,7 +220,7 @@ class MetarParser {
 
           const dirText = isVrb ? "de dirección variable" : `de los ${dirStr}°`;
           const speedText = `${speed} nudos (KT)${gusts ? ` con ráfagas de hasta ${gusts} nudos` : ""}`;
-          
+
           // Consejo para pilotos de planeador
           let gliderTip = "";
           if (gusts && (gusts - speed >= 10)) {
@@ -236,7 +236,7 @@ class MetarParser {
         }
         isMatched = true;
       }
-      
+
       // 6. Visibilidad (Metros, Millas, CAVOK)
       else if (!result.visib && (token === "CAVOK" || /^\d{4}$/.test(token) || /^\d+(\/\d+)?SM$/.test(token))) {
         if (token === "CAVOK") {
@@ -249,7 +249,7 @@ class MetarParser {
           if (meters === 9999) {
             decodedText = "Visibilidad de 10 kilómetros o más (Condiciones visuales excelentes)";
           } else {
-            decodedText = `Visibilidad horizontal de ${meters} metros (${(meters/1000).toFixed(1)} km)`;
+            decodedText = `Visibilidad horizontal de ${meters} metros (${(meters / 1000).toFixed(1)} km)`;
             if (meters < 1500) {
               decodedText += " ⚠️ ¡Alerta! Visibilidad reducida. Operación IFR obligatoria para aviones de motor, prohibido vuelo de planeadores sin habilitación especial.";
             }
@@ -263,12 +263,12 @@ class MetarParser {
         }
         isMatched = true;
       }
-      
+
       // 7. Fenómenos Meteorológicos Significativos (ej. -RA, DZ, BR, +TSRA, etc.)
       else if (MetarParser.isWeatherPhenomenon(token)) {
         let intensity = "";
         let rawPhen = token;
-        
+
         if (token.startsWith("-")) {
           intensity = "Ligera ";
           rawPhen = token.substring(1);
@@ -293,7 +293,7 @@ class MetarParser {
         title = "Fenómeno";
         isMatched = true;
       }
-      
+
       // 8. Capas de Nubes (ej. FEW025, SCT040CB, BKN080, NSC, CLR)
       else if (token === "NSC" || token === "NCD" || token === "CLR" || token === "SKC" || /^(FEW|SCT|BKN|OVC|VV)\d{3}(CB|TCU)?$/.test(token)) {
         if (token === "NSC") {
@@ -306,7 +306,7 @@ class MetarParser {
           const type = token.substring(0, 3);
           const heightFt = parseInt(token.substring(3, 6)) * 100;
           const special = token.length > 6 ? token.substring(6) : null;
-          
+
           let specialText = "";
           if (special === "CB") {
             specialText = " - ¡Cumulonimbus detectados! Altísimo peligro para planeadores por corrientes descendentes violentas y granizo.";
@@ -320,21 +320,21 @@ class MetarParser {
         title = "Nubosidad";
         isMatched = true;
       }
-      
+
       // 9. Temperatura y Punto de Rocío (ej. 12/08, M03/M05)
       else if (!result.tempDew && /^(M?\d{2})\/(M?\d{2})$/.test(token)) {
         const parts = token.split("/");
-        
+
         const parseTemp = (s) => s.startsWith("M") ? -parseInt(s.substring(1)) : parseInt(s);
         const temp = parseTemp(parts[0]);
         const dew = parseTemp(parts[1]);
-        
+
         // Calcular humedad relativa aproximada usando la fórmula de Magnus-Tetens
         const spread = temp - dew;
         const rh = Math.round(100 - (5 * spread)); // Regla empírica del spread de 5% por grado
 
         result.tempDew = { temp, dew, rh };
-        
+
         let fogWarning = "";
         if (spread <= 2 && spread >= 0) {
           fogWarning = " ⚠️ ¡Alerta de Niebla! Gradiente térmico muy bajo (≤ 2°C). Alta probabilidad de reducción de visibilidad en minutos por formación de niebla por radiación o advección.";
@@ -344,7 +344,7 @@ class MetarParser {
         title = "Temperatura y Rocío";
         isMatched = true;
       }
-      
+
       // 10. Altimímetro / QNH (ej. Q1028, A2992)
       else if (!result.altimeter && (/^Q\d{4}$/.test(token) || /^A\d{4}$/.test(token))) {
         if (token.startsWith("Q")) {
@@ -359,7 +359,7 @@ class MetarParser {
         title = "QNH / Altimímetro";
         isMatched = true;
       }
-      
+
       // 11. Cambios / Tendencias (NOSIG)
       else if (token === "NOSIG") {
         result.trend = "NOSIG";
@@ -367,7 +367,7 @@ class MetarParser {
         title = "Tendencia de Clima";
         isMatched = true;
       }
-      
+
       // 12. Remarks argentinos o especiales (RMK PP000)
       else if (token.startsWith("RMK") || (tIdx > 0 && tokens[tIdx - 1] === "RMK") || (tIdx > 1 && tokens[tIdx - 2] === "RMK" && token.startsWith("PP"))) {
         if (token === "RMK") {
@@ -418,7 +418,7 @@ class MetarParser {
   static isWeatherPhenomenon(token) {
     const cleanToken = token.replace(/^[-+]/, "").replace(/^VC/, "");
     if (cleanToken.length < 2 || cleanToken.length % 2 !== 0) return false;
-    
+
     // Probar si todos los bloques de 2 letras están en el diccionario
     for (let i = 0; i < cleanToken.length; i += 2) {
       let code = cleanToken.substring(i, i + 2);
@@ -476,7 +476,7 @@ class AtisSpeechEngine {
       if (!this.audioCtx) {
         this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
-      
+
       const ctx = this.audioCtx;
       if (ctx.state === 'suspended') {
         await ctx.resume();
@@ -485,15 +485,15 @@ class AtisSpeechEngine {
       const bufferSize = ctx.sampleRate * 0.15; // 150ms
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
-      
+
       // Llenar buffer con ruido blanco
       for (let i = 0; i < bufferSize; i++) {
         data[i] = Math.random() * 2 - 1;
       }
-      
+
       const noise = ctx.createBufferSource();
       noise.buffer = buffer;
-      
+
       // Filtro para hacerlo sonar metálico y áspero
       const filter = ctx.createBiquadFilter();
       filter.type = 'bandpass';
@@ -507,7 +507,7 @@ class AtisSpeechEngine {
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(ctx.destination);
-      
+
       noise.start();
     } catch (e) {
       console.warn("AudioContext no disponible o bloqueado por el navegador:", e);
@@ -517,11 +517,11 @@ class AtisSpeechEngine {
   // Convierte un METAR decodificado a texto hablado aeronáutico
   generateSpeechText(parsed) {
     let t = [];
-    
+
     // 1. Cabecera e Identificación
     const apt = MetarParser.findAirportByOaci(parsed.station);
     const stationName = apt ? apt.name : parsed.station;
-    
+
     // Deletrear identificador
     let spelledStation = "";
     for (let char of parsed.station) {
@@ -529,7 +529,7 @@ class AtisSpeechEngine {
     }
 
     t.push(`Información meteorológica de ${stationName}, identificador, ${spelledStation}.`);
-    
+
     // 2. Fecha y Hora
     if (parsed.dateTime) {
       t.push(`Observación del día, ${this.spellNumbers(parsed.dateTime.day)}, a las, ${this.spellNumbers(parsed.dateTime.hour)} ${this.spellNumbers(parsed.dateTime.min)} UTC.`);
@@ -584,7 +584,7 @@ class AtisSpeechEngine {
           isClear = true;
         }
       });
-      
+
       if (isClear) {
         t.push("Cielo despejado.");
       } else {
@@ -645,19 +645,19 @@ class AtisSpeechEngine {
   // Ejecuta la lectura de voz con efectos de radio
   speak(textSpoken, onStart, onEnd) {
     if (!this.speechSynth) return;
-    
+
     this.speechSynth.cancel(); // Cancelar cualquier audio previo
-    
+
     this.playSquelchSound();
-    
+
     const utterance = new SpeechSynthesisUtterance(textSpoken);
-    
+
     // Intentar buscar una voz en español de Argentina o España
     const voices = this.speechSynth.getVoices();
     let preferredVoice = voices.find(voice => voice.lang.includes('es-AR')) ||
-                         voices.find(voice => voice.lang.includes('es-ES')) ||
-                         voices.find(voice => voice.lang.startsWith('es'));
-    
+      voices.find(voice => voice.lang.includes('es-ES')) ||
+      voices.find(voice => voice.lang.startsWith('es'));
+
     if (preferredVoice) {
       utterance.voice = preferredVoice;
     }
@@ -740,16 +740,16 @@ class MetarGauges {
 
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
+
     points.forEach(pt => {
       const rad = (pt.angle - 90) * Math.PI / 180;
       const tx = cx + Math.cos(rad) * (radius - 16);
       const ty = cy + Math.sin(rad) * (radius - 16);
-      
+
       ctx.fillStyle = (pt.name === "N") ? "#dc2626" : "#0f172a";
       ctx.font = (pt.name === "N" || pt.name === "E" || pt.name === "S" || pt.name === "W") ? "bold 13px Outfit" : "11px Outfit";
       ctx.fillText(pt.name, tx, ty);
-      
+
       // Pequeñas líneas marcas
       const startX = cx + Math.cos(rad) * radius;
       const startY = cy + Math.sin(rad) * radius;
@@ -771,12 +771,12 @@ class MetarGauges {
       // El viento viene desde el ángulo indicado y viaja al opuesto
       const fromX = cx + Math.cos(angleRad) * (radius - 30);
       const fromY = cy + Math.sin(angleRad) * (radius - 30);
-      
+
       // Dibujar flecha indicadora
       ctx.strokeStyle = "#1d4ed8";
       ctx.fillStyle = "#1d4ed8";
       ctx.lineWidth = 3.5;
-      
+
       ctx.beginPath();
       ctx.moveTo(fromX, fromY);
       ctx.lineTo(cx, cy);
@@ -793,7 +793,7 @@ class MetarGauges {
 
       // 2. Dibujar manga de viento animada en la dirección opuesta al viento
       const windSockAngle = (direction + 90) * Math.PI / 180; // Apunta hacia adelante
-      
+
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(windSockAngle);
@@ -819,7 +819,7 @@ class MetarGauges {
       const len = 35; // Largo
 
       ctx.lineWidth = 1;
-      
+
       // Dibujar 4 franjas rojas y blancas de la manga de viento
       const segments = [
         { color: "#dc2626", w1: 8, w2: 7, l: 0 },
@@ -831,14 +831,14 @@ class MetarGauges {
       function segmentLength(i) { return (len / 4) * i; }
 
       ctx.beginPath();
-      
+
       // Dibujar segmentos con distorsión por caída (droop)
       segments.forEach((seg, index) => {
         const x1 = index * (len / 4);
         const y1 = -25 + (droop * Math.pow(index / 4, 2));
         const x2 = (index + 1) * (len / 4);
         const y2 = -25 + (droop * Math.pow((index + 1) / 4, 2));
-        
+
         ctx.fillStyle = seg.color;
         ctx.beginPath();
         ctx.moveTo(x1, y1 - seg.w1);
@@ -874,8 +874,8 @@ class MetarGauges {
 
     // Fondo degradado del cielo diurno (celeste brillante a horizonte claro)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
-    skyGrad.addColorStop(0, "#bae6fd"); 
-    skyGrad.addColorStop(1, "#f0f9ff"); 
+    skyGrad.addColorStop(0, "#bae6fd");
+    skyGrad.addColorStop(1, "#f0f9ff");
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -916,11 +916,11 @@ class MetarGauges {
     const feetToY = (ft) => {
       if (ft <= 0) return 245;
       if (ft >= 10000) return 30;
-      
+
       // Encontrar segmento
       for (let i = 0; i < levels.length - 1; i++) {
         const top = levels[i];
-        const bot = levels[i+1];
+        const bot = levels[i + 1];
         if (ft <= top.feet && ft >= bot.feet) {
           const ratio = (ft - bot.feet) / (top.feet - bot.feet);
           return bot.y - ratio * (bot.y - top.y);
@@ -935,18 +935,18 @@ class MetarGauges {
       if (cloud.height !== null) {
         hasActualClouds = true;
         const cyY = feetToY(cloud.height);
-        
+
         // Estilo de nube basado en cobertura
         let count = 4; // FEW
         let size = 20;
         let opacity = 0.85;
-        
+
         if (cloud.type === "SCT") { count = 8; }
         else if (cloud.type === "BKN") { count = 16; }
         else if (cloud.type === "OVC") { count = 28; }
 
         ctx.fillStyle = cloud.special === "CB" ? `rgba(71, 85, 105, ${opacity})` : `rgba(255, 255, 255, ${opacity})`;
-        
+
         // Dibujar cumulonimbus especial
         if (cloud.special === "CB") {
           ctx.beginPath();
@@ -958,12 +958,12 @@ class MetarGauges {
           ctx.bezierCurveTo(220, cyY + 35, 140, cyY + 35, 100, cyY + 15);
           ctx.closePath();
           ctx.fill();
-          
+
           // Delineado para cumulonimbus
           ctx.strokeStyle = "rgba(15, 23, 42, 0.5)";
           ctx.lineWidth = 1.5;
           ctx.stroke();
-          
+
           // Rayos o lluvia sutil
           ctx.strokeStyle = "rgba(234, 88, 12, 0.8)";
           ctx.lineWidth = 1.5;
@@ -983,7 +983,7 @@ class MetarGauges {
           const startX = 80;
           const endX = width - 30;
           const step = (endX - startX) / count;
-          
+
           for (let k = 0; k <= count; k++) {
             const nX = startX + k * step + (Math.random() * 5 - 2.5);
             ctx.arc(nX, cyY, size / 1.5 + (Math.random() * 4), 0, Math.PI * 2);
@@ -1018,13 +1018,13 @@ class MetarGauges {
     const ctx = canvas.getContext("2d");
     const w = canvas.width;
     const h = canvas.height;
-    
+
     ctx.clearRect(0, 0, w, h);
-    
+
     // Escala del termómetro -10°C a 40°C
     const minT = -15;
     const maxT = 45;
-    
+
     const tempToY = (t) => {
       const padding = 20;
       return h - padding - ((t - minT) / (maxT - minT)) * (h - padding * 2);
@@ -1035,59 +1035,59 @@ class MetarGauges {
     ctx.lineWidth = 6;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(w/2, 20);
-    ctx.lineTo(w/2, h - 20);
+    ctx.moveTo(w / 2, 20);
+    ctx.lineTo(w / 2, h - 20);
     ctx.stroke();
 
     // Dibujar marcas de escala a la izquierda
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
     ctx.font = "9px Inter";
-    
+
     for (let t = -10; t <= 40; t += 10) {
       const y = tempToY(t);
-      
+
       ctx.strokeStyle = "#475569";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(w/2 - 12, y);
-      ctx.lineTo(w/2 - 4, y);
+      ctx.moveTo(w / 2 - 12, y);
+      ctx.lineTo(w / 2 - 4, y);
       ctx.stroke();
-      
+
       ctx.fillStyle = t <= 0 ? "#1d4ed8" : "#dc2626";
-      ctx.fillText(`${t}°`, w/2 - 16, y);
+      ctx.fillText(`${t}°`, w / 2 - 16, y);
     }
 
     // Dibujar marca de temperatura real (Rojo)
     const yT = tempToY(temp);
     ctx.fillStyle = "#dc2626";
     ctx.beginPath();
-    ctx.arc(w/2, yT, 7, 0, Math.PI * 2);
+    ctx.arc(w / 2, yT, 7, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = "#0f172a";
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    
+
     ctx.textAlign = "left";
     ctx.fillStyle = "#b91c1c";
     ctx.font = "bold 12px Outfit";
-    ctx.fillText(`TEMP: ${temp}°C`, w/2 + 15, yT);
+    ctx.fillText(`TEMP: ${temp}°C`, w / 2 + 15, yT);
 
     // Dibujar marca de punto de rocío (Azul)
     const yD = tempToY(dew);
     ctx.fillStyle = "#2563eb";
     ctx.beginPath();
-    ctx.arc(w/2, yD, 7, 0, Math.PI * 2);
+    ctx.arc(w / 2, yD, 7, 0, Math.PI * 2);
     ctx.fill();
-    
+
     ctx.strokeStyle = "#0f172a";
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = "#1d4ed8";
     ctx.font = "bold 11px Outfit";
-    ctx.fillText(`ROCÍO: ${dew}°C`, w/2 + 15, yD + 2);
+    ctx.fillText(`ROCÍO: ${dew}°C`, w / 2 + 15, yD + 2);
   }
 }
 
@@ -1188,7 +1188,7 @@ class MetarQuiz {
     const q = this.getCurrentQuestion();
     const isCorrect = q.answer === answerIdx;
     if (isCorrect) this.score++;
-    
+
     return {
       isCorrect,
       correctIdx: q.answer,
@@ -1213,7 +1213,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const airportContainer = document.getElementById("airport-grid");
   const metarTextInput = document.getElementById("metar-manual-input");
   const decodeBtn = document.getElementById("decode-btn");
-  const liveFetchBtn = document.getElementById("live-fetch-btn");
 
   // Control de Modo de Consulta (FIR vs Manual)
   const modeFirBtn = document.getElementById("mode-fir-btn");
@@ -1238,17 +1237,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Preparar el motor de Voz ATIS de forma global
   const playVoiceBtn = document.getElementById("play-atis-btn");
   const stopVoiceBtn = document.getElementById("stop-atis-btn");
-  
+
   playVoiceBtn.addEventListener("click", () => {
     if (!currentParsedMetar) {
       alert("Por favor, primero consulta o decodifica un reporte METAR en la pestaña 'Consulta' para escuchar el ATIS.");
       return;
     }
     const speechText = speechEngine.generateSpeechText(currentParsedMetar);
-    
+
     playVoiceBtn.classList.add("btn-playing");
     playVoiceBtn.textContent = "🔊 Emitiendo ATIS...";
-    
+
     speechEngine.speak(speechText, null, () => {
       playVoiceBtn.classList.remove("btn-playing");
       playVoiceBtn.textContent = "📻 Escuchar ATIS (Audio)";
@@ -1274,7 +1273,7 @@ document.addEventListener("DOMContentLoaded", () => {
   firSelect.addEventListener("change", () => {
     const selectedFir = firSelect.value;
     airportContainer.innerHTML = "";
-    
+
     if (selectedFir === "-1") return;
 
     const airports = AIRPORT_DATABASE[selectedFir];
@@ -1288,7 +1287,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="apt-city">${apt.city}</div>
         </div>
       `;
-      
+
       card.addEventListener("click", () => {
         // Al hacer click, cargamos su OACI en la barra de consulta y fetch
         metarTextInput.value = apt.oaci;
@@ -1340,9 +1339,9 @@ document.addEventListener("DOMContentLoaded", () => {
     showLoading(true);
     try {
       const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${oaciCode.toUpperCase()}&format=json`;
-      
+
       const data = await fetchJsonWithFallback(targetUrl);
-      
+
       if (data && data.length > 0) {
         const rawMetar = data[0].rawOb;
         metarTextInput.value = rawMetar;
@@ -1363,42 +1362,27 @@ document.addEventListener("DOMContentLoaded", () => {
     if (text) {
       decodeAndRenderMetar(text);
     } else {
-      alert("Por favor ingresa un código METAR válido o el código OACI de un aeropuerto.");
-    }
-  });
-
-  liveFetchBtn.addEventListener("click", () => {
-    const text = metarTextInput.value.trim();
-    if (text.length === 4) {
-      fetchLiveMetar(text);
-    } else {
-      alert("Para consulta automática, ingresa exactamente las 4 letras del código OACI (ej. SABE, SAEZ).");
+      alert("Por favor ingresa un reporte METAR completo.");
     }
   });
 
   // Decodifica y renderiza todos los elementos y gráficos
   function decodeAndRenderMetar(metarString) {
     showLoading(true);
-    
-    // Si metarString es solo un código OACI de 4 letras, buscar en NOAA
-    if (/^[A-Za-z]{4}$/.test(metarString.trim())) {
-      fetchLiveMetar(metarString.trim());
-      return;
-    }
 
     setTimeout(() => {
       try {
         const parsed = MetarParser.parse(metarString);
         currentParsedMetar = parsed;
-        
+
         // 1. Mostrar cabeceras y tarjetas
         document.getElementById("output-section").classList.remove("hidden-element");
-        
+
         // Categoría de vuelo
         const catBadge = document.getElementById("flight-cat-badge");
         catBadge.textContent = parsed.flightCategory;
         catBadge.className = `flight-category-badge cat-${parsed.flightCategory.toLowerCase()}`;
-        
+
         // Identidad de estación
         const apt = MetarParser.findAirportByOaci(parsed.station);
         document.getElementById("decoded-station-title").textContent = apt ? apt.name : `ESTACIÓN ${parsed.station}`;
@@ -1411,10 +1395,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const dir = parsed.wind ? parsed.wind.direction : null;
         const spd = parsed.wind ? parsed.wind.speed : null;
         const gst = parsed.wind ? parsed.wind.gusts : null;
-        
+
         MetarGauges.drawWindCompass("wind-canvas", dir, spd, gst);
         MetarGauges.drawCloudLevels("clouds-canvas", parsed.clouds);
-        
+
         if (parsed.tempDew) {
           document.getElementById("thermometer-container").classList.remove("hidden-element");
           MetarGauges.drawThermometer("thermometer-canvas", parsed.tempDew.temp, parsed.tempDew.dew);
@@ -1442,7 +1426,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderInteractiveTokens(parsed) {
     const rawContainer = document.getElementById("raw-metar-tokenizer");
     const explanationList = document.getElementById("token-explanations-list");
-    
+
     rawContainer.innerHTML = "";
     explanationList.innerHTML = "";
 
@@ -1473,7 +1457,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Deseleccionar previos
         document.querySelectorAll(".interactive-token").forEach(s => s.classList.remove("token-active"));
         document.querySelectorAll(".token-explanation-card").forEach(c => c.classList.remove("card-active"));
-        
+
         span.classList.add("token-active");
         card.classList.add("card-active");
       };
@@ -1497,10 +1481,10 @@ document.addEventListener("DOMContentLoaded", () => {
   navButtons.forEach(btn => {
     btn.addEventListener("click", () => {
       const targetView = btn.getAttribute("data-view");
-      
+
       navButtons.forEach(b => b.classList.remove("nav-active"));
       views.forEach(v => v.classList.add("hidden-element"));
-      
+
       btn.classList.add("nav-active");
       document.getElementById(targetView).classList.remove("hidden-element");
 
@@ -1547,7 +1531,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function selectQuizAnswer(selectedIndex) {
     const buttons = quizOptionsList.querySelectorAll(".quiz-option-btn");
-    
+
     // Deshabilitar todos los botones para que no cambien el voto
     buttons.forEach(b => b.disabled = true);
 
@@ -1565,7 +1549,7 @@ document.addEventListener("DOMContentLoaded", () => {
     quizExplanationCard.classList.remove("hidden-element");
     quizExplanationText.textContent = result.explanation;
     quizScoreDisplay.textContent = `${quizEngine.score} / ${quizEngine.questions.length}`;
-    
+
     quizNextBtn.classList.remove("hidden-element");
   }
 
