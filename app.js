@@ -1242,11 +1242,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Consultar en NOAA API de forma remota
+  // Consultar en NOAA API de forma remota pasando por proxy CORS AllOrigins
   async function fetchLiveMetar(oaciCode) {
     showLoading(true);
     try {
-      const response = await fetch(`https://aviationweather.gov/api/data/metar?ids=${oaciCode.toUpperCase()}&format=json`);
+      const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${oaciCode.toUpperCase()}&format=json`;
+      const proxiedUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+      
+      const response = await fetch(proxiedUrl);
       if (!response.ok) throw new Error("Error en red de NOAA");
       const data = await response.json();
       
