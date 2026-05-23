@@ -710,17 +710,17 @@ class MetarGauges {
     // Limpiar canvas
     ctx.clearRect(0, 0, width, height);
 
-    // Fondo brillante sutil
+    // Fondo brillante claro sutil
     const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, radius + 20);
-    grad.addColorStop(0, "rgba(30, 41, 59, 0.5)");
-    grad.addColorStop(1, "rgba(15, 23, 42, 0.9)");
+    grad.addColorStop(0, "#ffffff");
+    grad.addColorStop(1, "#f1f5f9");
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 15, 0, Math.PI * 2);
     ctx.fill();
 
     // Dibujar anillo de brújula
-    ctx.strokeStyle = "#475569";
+    ctx.strokeStyle = "#0f172a";
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -746,7 +746,7 @@ class MetarGauges {
       const tx = cx + Math.cos(rad) * (radius - 16);
       const ty = cy + Math.sin(rad) * (radius - 16);
       
-      ctx.fillStyle = (pt.name === "N") ? "#ef4444" : "#e2e8f0";
+      ctx.fillStyle = (pt.name === "N") ? "#dc2626" : "#0f172a";
       ctx.font = (pt.name === "N" || pt.name === "E" || pt.name === "S" || pt.name === "W") ? "bold 13px Outfit" : "11px Outfit";
       ctx.fillText(pt.name, tx, ty);
       
@@ -755,7 +755,7 @@ class MetarGauges {
       const startY = cy + Math.sin(rad) * radius;
       const endX = cx + Math.cos(rad) * (radius - 8);
       const endY = cy + Math.sin(rad) * (radius - 8);
-      ctx.strokeStyle = "#64748b";
+      ctx.strokeStyle = "#475569";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(startX, startY);
@@ -773,9 +773,9 @@ class MetarGauges {
       const fromY = cy + Math.sin(angleRad) * (radius - 30);
       
       // Dibujar flecha indicadora
-      ctx.strokeStyle = "#3b82f6";
-      ctx.fillStyle = "#3b82f6";
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#1d4ed8";
+      ctx.fillStyle = "#1d4ed8";
+      ctx.lineWidth = 3.5;
       
       ctx.beginPath();
       ctx.moveTo(fromX, fromY);
@@ -799,7 +799,7 @@ class MetarGauges {
       ctx.rotate(windSockAngle);
 
       // Dibujar poste de la manga
-      ctx.strokeStyle = "#94a3b8";
+      ctx.strokeStyle = "#475569";
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -807,7 +807,7 @@ class MetarGauges {
       ctx.stroke();
 
       // Aro de soporte de la manga
-      ctx.fillStyle = "#f1f5f9";
+      ctx.fillStyle = "#0f172a";
       ctx.beginPath();
       ctx.arc(0, -25, 4, 0, Math.PI * 2);
       ctx.fill();
@@ -822,9 +822,9 @@ class MetarGauges {
       
       // Dibujar 4 franjas rojas y blancas de la manga de viento
       const segments = [
-        { color: "#ef4444", w1: 8, w2: 7, l: 0 },
+        { color: "#dc2626", w1: 8, w2: 7, l: 0 },
         { color: "#ffffff", w1: 7, w2: 6, l: segmentLength(1) },
-        { color: "#ef4444", w1: 6, w2: 5, l: segmentLength(2) },
+        { color: "#dc2626", w1: 6, w2: 5, l: segmentLength(2) },
         { color: "#ffffff", w1: 5, w2: 3, l: segmentLength(3) }
       ];
 
@@ -852,13 +852,13 @@ class MetarGauges {
       ctx.restore();
 
       // Texto de información en el centro inferior
-      ctx.fillStyle = "#e2e8f0";
+      ctx.fillStyle = "#0f172a";
       ctx.font = "bold 15px Outfit";
       const dirText = direction === "VRB" ? "VRB" : `${direction}°`;
       ctx.fillText(`${dirText} / ${speed} KT`, cx, cy + radius + 14);
     } else {
       // Viento calmo
-      ctx.fillStyle = "#10b981";
+      ctx.fillStyle = "#15803d";
       ctx.font = "bold 15px Outfit";
       ctx.fillText("VIENTO EN CALMA", cx, cy);
     }
@@ -872,10 +872,10 @@ class MetarGauges {
     const width = canvas.width;
     const height = canvas.height;
 
-    // Fondo degradado del cielo (azul cielo arriba, más claro abajo)
+    // Fondo degradado del cielo diurno (celeste brillante a horizonte claro)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
-    skyGrad.addColorStop(0, "#0f172a"); // Noche profunda
-    skyGrad.addColorStop(1, "#1e293b"); // Crepúsculo
+    skyGrad.addColorStop(0, "#bae6fd"); 
+    skyGrad.addColorStop(1, "#f0f9ff"); 
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -889,7 +889,7 @@ class MetarGauges {
       { feet: 0, y: 245 }
     ];
 
-    ctx.strokeStyle = "rgba(100, 116, 139, 0.3)";
+    ctx.strokeStyle = "rgba(15, 23, 42, 0.15)";
     ctx.lineWidth = 1;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
@@ -901,14 +901,14 @@ class MetarGauges {
       ctx.lineTo(width - 15, lvl.y);
       ctx.stroke();
 
-      ctx.fillStyle = "#94a3b8";
+      ctx.fillStyle = "#334155";
       ctx.fillText(`${lvl.feet.toLocaleString()} ft`, 10, lvl.y);
     });
 
     // Dibujar el suelo
-    ctx.fillStyle = "#064e3b";
+    ctx.fillStyle = "#166534";
     ctx.fillRect(60, height - 15, width - 75, 15);
-    ctx.fillStyle = "#10b981";
+    ctx.fillStyle = "#22c55e";
     ctx.fillRect(60, height - 17, width - 75, 2);
 
     // Dibujar las capas nubosas reales
@@ -939,13 +939,13 @@ class MetarGauges {
         // Estilo de nube basado en cobertura
         let count = 4; // FEW
         let size = 20;
-        let opacity = 0.5;
+        let opacity = 0.85;
         
-        if (cloud.type === "SCT") { count = 8; opacity = 0.65; }
-        else if (cloud.type === "BKN") { count = 16; opacity = 0.8; }
-        else if (cloud.type === "OVC") { count = 28; opacity = 0.95; }
+        if (cloud.type === "SCT") { count = 8; }
+        else if (cloud.type === "BKN") { count = 16; }
+        else if (cloud.type === "OVC") { count = 28; }
 
-        ctx.fillStyle = cloud.special === "CB" ? `rgba(71, 85, 105, ${opacity})` : `rgba(241, 245, 249, ${opacity})`;
+        ctx.fillStyle = cloud.special === "CB" ? `rgba(71, 85, 105, ${opacity})` : `rgba(255, 255, 255, ${opacity})`;
         
         // Dibujar cumulonimbus especial
         if (cloud.special === "CB") {
@@ -959,8 +959,13 @@ class MetarGauges {
           ctx.closePath();
           ctx.fill();
           
+          // Delineado para cumulonimbus
+          ctx.strokeStyle = "rgba(15, 23, 42, 0.5)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          
           // Rayos o lluvia sutil
-          ctx.strokeStyle = "rgba(250, 204, 21, 0.4)";
+          ctx.strokeStyle = "rgba(234, 88, 12, 0.8)";
           ctx.lineWidth = 1.5;
           ctx.beginPath();
           ctx.moveTo(170, cyY + 25);
@@ -969,7 +974,7 @@ class MetarGauges {
           ctx.lineTo(170, cyY + 60);
           ctx.stroke();
 
-          ctx.fillStyle = "#ef4444";
+          ctx.fillStyle = "#b91c1c";
           ctx.font = "bold 9px Outfit";
           ctx.fillText("CB (Cumulonimbus)", 200, cyY - 15);
         } else {
@@ -984,17 +989,22 @@ class MetarGauges {
             ctx.arc(nX, cyY, size / 1.5 + (Math.random() * 4), 0, Math.PI * 2);
           }
           ctx.fill();
+
+          // Delineado para alto contraste diurno
+          ctx.strokeStyle = "rgba(15, 23, 42, 0.25)";
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
         }
 
         // Etiqueta de la capa
-        ctx.fillStyle = "#f8fafc";
+        ctx.fillStyle = "#0f172a";
         ctx.font = "bold 10px Outfit";
         ctx.fillText(`${cloud.type} @ ${cloud.height.toLocaleString()} ft`, width - 110, cyY - 12);
       }
     });
 
     if (!hasActualClouds) {
-      ctx.fillStyle = "#38bdf8";
+      ctx.fillStyle = "#0369a1";
       ctx.textAlign = "center";
       ctx.font = "bold 13px Outfit";
       ctx.fillText("SIN NUBES SIGNIFICATIVAS / CELESTE DESPEJADO", width / 2 + 20, height / 2);
@@ -1021,7 +1031,7 @@ class MetarGauges {
     };
 
     // Dibujar poste de escalas
-    ctx.strokeStyle = "#475569";
+    ctx.strokeStyle = "#0f172a";
     ctx.lineWidth = 6;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -1037,44 +1047,45 @@ class MetarGauges {
     for (let t = -10; t <= 40; t += 10) {
       const y = tempToY(t);
       
-      ctx.strokeStyle = "#64748b";
+      ctx.strokeStyle = "#475569";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(w/2 - 12, y);
       ctx.lineTo(w/2 - 4, y);
       ctx.stroke();
       
-      ctx.fillStyle = t <= 0 ? "#60a5fa" : "#ef4444";
+      ctx.fillStyle = t <= 0 ? "#1d4ed8" : "#dc2626";
       ctx.fillText(`${t}°`, w/2 - 16, y);
     }
 
     // Dibujar marca de temperatura real (Rojo)
     const yT = tempToY(temp);
-    ctx.fillStyle = "#ef4444";
+    ctx.fillStyle = "#dc2626";
     ctx.beginPath();
     ctx.arc(w/2, yT, 7, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = "#ffffff";
+    ctx.strokeStyle = "#0f172a";
     ctx.lineWidth = 1.5;
     ctx.stroke();
     
     ctx.textAlign = "left";
+    ctx.fillStyle = "#b91c1c";
     ctx.font = "bold 12px Outfit";
     ctx.fillText(`TEMP: ${temp}°C`, w/2 + 15, yT);
 
     // Dibujar marca de punto de rocío (Azul)
     const yD = tempToY(dew);
-    ctx.fillStyle = "#3b82f6";
+    ctx.fillStyle = "#2563eb";
     ctx.beginPath();
     ctx.arc(w/2, yD, 7, 0, Math.PI * 2);
     ctx.fill();
     
-    ctx.strokeStyle = "#ffffff";
+    ctx.strokeStyle = "#0f172a";
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.fillStyle = "#93c5fd";
+    ctx.fillStyle = "#1d4ed8";
     ctx.font = "bold 11px Outfit";
     ctx.fillText(`ROCÍO: ${dew}°C`, w/2 + 15, yD + 2);
   }
@@ -1204,6 +1215,52 @@ document.addEventListener("DOMContentLoaded", () => {
   const decodeBtn = document.getElementById("decode-btn");
   const liveFetchBtn = document.getElementById("live-fetch-btn");
 
+  // Control de Modo de Consulta (FIR vs Manual)
+  const modeFirBtn = document.getElementById("mode-fir-btn");
+  const modeManualBtn = document.getElementById("mode-manual-btn");
+  const modeFirContainer = document.getElementById("mode-fir-container");
+  const modeManualContainer = document.getElementById("mode-manual-container");
+
+  modeFirBtn.addEventListener("click", () => {
+    modeFirBtn.classList.add("active");
+    modeManualBtn.classList.remove("active");
+    modeFirContainer.classList.remove("hidden-element");
+    modeManualContainer.classList.add("hidden-element");
+  });
+
+  modeManualBtn.addEventListener("click", () => {
+    modeManualBtn.classList.add("active");
+    modeFirBtn.classList.remove("active");
+    modeManualContainer.classList.remove("hidden-element");
+    modeFirContainer.classList.add("hidden-element");
+  });
+
+  // Preparar el motor de Voz ATIS de forma global
+  const playVoiceBtn = document.getElementById("play-atis-btn");
+  const stopVoiceBtn = document.getElementById("stop-atis-btn");
+  
+  playVoiceBtn.addEventListener("click", () => {
+    if (!currentParsedMetar) {
+      alert("Por favor, primero consulta o decodifica un reporte METAR en la pestaña 'Consulta' para escuchar el ATIS.");
+      return;
+    }
+    const speechText = speechEngine.generateSpeechText(currentParsedMetar);
+    
+    playVoiceBtn.classList.add("btn-playing");
+    playVoiceBtn.textContent = "🔊 Emitiendo ATIS...";
+    
+    speechEngine.speak(speechText, null, () => {
+      playVoiceBtn.classList.remove("btn-playing");
+      playVoiceBtn.textContent = "📻 Escuchar ATIS (Audio)";
+    });
+  });
+
+  stopVoiceBtn.addEventListener("click", () => {
+    speechEngine.stop();
+    playVoiceBtn.classList.remove("btn-playing");
+    playVoiceBtn.textContent = "📻 Escuchar ATIS (Audio)";
+  });
+
   // Rellenar selector de FIR
   firSelect.innerHTML = '<option value="-1">--- Selecciona una Región FIR ---</option>';
   for (const firName in AIRPORT_DATABASE) {
@@ -1242,16 +1299,49 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Consultar en NOAA API de forma remota pasando por proxy CORS AllOrigins
+  // Función auxiliar para consultar con reintentos utilizando proxies CORS redundantes
+  async function fetchJsonWithFallback(targetUrl) {
+    // 1. Primer intento: api.codetabs.com (Proxy CORS muy rápido y confiable)
+    try {
+      const codetabsUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
+      const response = await fetch(codetabsUrl);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (e) {
+      console.warn("Fallo en proxy CodeTabs, intentando AllOrigins...", e);
+    }
+
+    // 2. Segundo intento: api.allorigins.win (Proxy CORS de respaldo)
+    try {
+      const allOriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+      const response = await fetch(allOriginsUrl);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (e) {
+      console.warn("Fallo en proxy AllOrigins, intentando consulta directa...", e);
+    }
+
+    // 3. Tercer intento: Consulta directa (Por si acaso el entorno tiene CORS desactivado o permite peticiones directas)
+    try {
+      const response = await fetch(targetUrl);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (e) {
+      console.error("Todos los intentos de conexión fallaron:", e);
+      throw e;
+    }
+  }
+
+  // Consultar en NOAA API de forma remota utilizando proxies redundantes para garantizar estabilidad
   async function fetchLiveMetar(oaciCode) {
     showLoading(true);
     try {
       const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${oaciCode.toUpperCase()}&format=json`;
-      const proxiedUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
       
-      const response = await fetch(proxiedUrl);
-      if (!response.ok) throw new Error("Error en red de NOAA");
-      const data = await response.json();
+      const data = await fetchJsonWithFallback(targetUrl);
       
       if (data && data.length > 0) {
         const rawMetar = data[0].rawOb;
@@ -1262,8 +1352,8 @@ document.addEventListener("DOMContentLoaded", () => {
         showLoading(false);
       }
     } catch (err) {
-      console.error(err);
-      alert("Hubo un error de conexión con la red. Cambiando a entrada manual.");
+      console.error("Error al obtener METAR en vivo:", err);
+      alert("Hubo un error de conexión con la red al intentar obtener el reporte en vivo. Cambiando a entrada manual.");
       showLoading(false);
     }
   }
@@ -1334,27 +1424,7 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("thermometer-container").classList.add("hidden-element");
         }
 
-        // 4. Preparar el motor de Voz ATIS
-        const playVoiceBtn = document.getElementById("play-atis-btn");
-        const stopVoiceBtn = document.getElementById("stop-atis-btn");
-        
-        playVoiceBtn.onclick = () => {
-          const speechText = speechEngine.generateSpeechText(parsed);
-          
-          playVoiceBtn.classList.add("btn-playing");
-          playVoiceBtn.textContent = "🔊 Emitiendo ATIS...";
-          
-          speechEngine.speak(speechText, null, () => {
-            playVoiceBtn.classList.remove("btn-playing");
-            playVoiceBtn.textContent = "📻 Escuchar ATIS (Audio)";
-          });
-        };
 
-        stopVoiceBtn.onclick = () => {
-          speechEngine.stop();
-          playVoiceBtn.classList.remove("btn-playing");
-          playVoiceBtn.textContent = "📻 Escuchar ATIS (Audio)";
-        };
 
         // Scroll suave al resultado
         document.getElementById("output-section").scrollIntoView({ behavior: 'smooth' });
@@ -1517,6 +1587,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Pre-cargar el primer METAR de prueba
-  decodeAndRenderMetar("METAR SABE 231500Z 07007KT 9999 FEW027 13/06 Q1029 NOSIG RMK PP000 =");
+  // Pre-cargar el valor en el input para que tenga un ejemplo, pero mantener la interfaz limpia al inicio
+  metarTextInput.value = "METAR SABE 231500Z 07007KT 9999 FEW027 13/06 Q1029 NOSIG RMK PP000 =";
 });

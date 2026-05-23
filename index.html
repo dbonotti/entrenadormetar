@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <!-- Asegurar escalado móvil táctil perfecto -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>METAR Decodificador & Entrenador de Vuelo 🪂</title>
   <link rel="stylesheet" href="style.css">
-  
+
   <!-- SEO e información adicional -->
-  <meta name="description" content="Aplicación web interactiva móvil para decodificar reportes metorológicos METAR de aviación y entrenar pilotos de planeador con simulador de examen y audio ATIS.">
-  <meta name="theme-color" content="#060913">
+  <meta name="description"
+    content="Aplicación web interactiva móvil para decodificar reportes metorológicos METAR de aviación y entrenar pilotos de planeador con simulador de examen y audio ATIS.">
+  <meta name="theme-color" content="#f1f5f9">
 </head>
+
 <body>
 
   <!-- Cargador de aplicación dinámico -->
@@ -20,55 +23,73 @@
   </div>
 
   <div class="app-container">
-    
+
     <!-- CABECERA PRINCIPAL -->
     <header class="app-header">
       <div class="logo-container">
         <span class="logo-icon">🪂</span>
         <h1 class="app-title">METAR Entrenador</h1>
       </div>
-      <p class="app-subtitle">Piloto de Planeador • Escuela de Vuelo</p>
+      <p class="app-subtitle">Curso de piloto de planeador - 2026 - Aeroclub Punta Alta</p>
     </header>
 
     <!-- ================= VIEW 1: CONSULTA Y DECO (📡) ================= -->
     <main id="view-decode" class="app-view">
-      
+
       <!-- Panel de Selección de Aeródromos Argentinos -->
       <section class="glass-card">
-        <h2 class="card-title">📡 Consulta de Reportes SMN</h2>
-        
-        <div class="selector-group">
-          <!-- Selector de FIR -->
+        <h2 class="card-title">📡 Consulta & Decodificación</h2>
+
+        <!-- Selector de Modo de Consulta -->
+        <div class="mode-selector">
+          <button id="mode-fir-btn" class="mode-btn active" type="button">
+            <span>🗺️</span> Por Región FIR
+          </button>
+          <button id="mode-manual-btn" class="mode-btn" type="button">
+            <span>✍️</span> Ingreso Manual / Reporte
+          </button>
+        </div>
+
+        <!-- Opción A: Búsqueda por Región FIR -->
+        <div id="mode-fir-container" class="selector-group">
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+            Selecciona una Región FIR de Argentina para listar sus aeródromos y consultar sus reportes en tiempo real:
+          </p>
           <div class="styled-select-wrapper">
             <select id="fir-select" class="styled-select">
               <option value="-1">Cargando regiones...</option>
             </select>
           </div>
-          
+
           <!-- Rejilla de Aeródromos correspondientes -->
           <div id="airport-grid" class="airport-grid">
             <!-- Cargado por JS -->
           </div>
         </div>
 
-        <!-- Ingreso Manual o Consulta Directa -->
-        <div class="input-row">
-          <textarea id="metar-manual-input" class="styled-textarea" placeholder="Ingresa código OACI (ej: SABE) o pega un reporte METAR completo..."></textarea>
-          <button id="live-fetch-btn" class="btn-primary" title="Consultar METAR en tiempo real de NOAA">
-            <span>📡</span> Conectar
-          </button>
+        <!-- Opción B: Ingreso Manual o Consulta Directa (Oculta al inicio) -->
+        <div id="mode-manual-container" class="selector-group hidden-element">
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+            Ingresa un código OACI de 4 letras para consultar NOAA, o pega un reporte METAR completo para decodificarlo:
+          </p>
+          <textarea id="metar-manual-input" class="styled-textarea" style="height: 80px;"
+            placeholder="Ej: SABE o pega un reporte METAR completo..."></textarea>
+          
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button id="live-fetch-btn" class="btn-primary" style="flex: 1;" title="Consultar METAR en tiempo real de NOAA">
+              <span>📡</span> Consultar NOAA
+            </button>
+            <button id="decode-btn" class="btn-secondary" style="flex: 1;">
+              🔍 Decodificar Manual
+            </button>
+          </div>
         </div>
-        
-        <div style="display: flex; gap: 8px; margin-top: 10px;">
-          <button id="decode-btn" class="btn-secondary" style="flex: 1;">
-            🔍 Decodificar Reporte
-          </button>
-        </div>
+
       </section>
 
       <!-- SECCIÓN DE RESULTADO DE DECODIFICACIÓN (Oculta al inicio) -->
       <section id="output-section" class="hidden-element">
-        
+
         <!-- Cabecera del Aeropuerto y Categoría de Vuelo -->
         <div class="result-header-card">
           <div class="station-info">
@@ -87,7 +108,7 @@
           <div id="raw-metar-tokenizer" class="raw-metar-box">
             <!-- Tokens interactivos por JS -->
           </div>
-          
+
           <!-- Lista explicativa dinámica -->
           <div id="token-explanations-list" class="token-explanations">
             <!-- Tarjetas explicativas por JS -->
@@ -97,14 +118,14 @@
         <!-- Gráficos de Instrumentación Interactivos -->
         <div class="glass-card">
           <h2 class="card-title">📊 Interpretación Gráfica</h2>
-          
+
           <div class="gauges-layout">
             <!-- Rosa de los Vientos / Calcetín de Viento -->
             <div class="gauge-card">
               <span class="cheat-section-title" style="margin-bottom: 8px;">Rosa de Vientos & Manga</span>
               <canvas id="wind-canvas" class="canvas-widget" width="220" height="220"></canvas>
             </div>
-            
+
             <!-- Capas de Nubes -->
             <div class="gauge-card">
               <span class="cheat-section-title" style="margin-bottom: 8px;">Cielo & Capas de Nubes</span>
@@ -127,7 +148,8 @@
                 <div id="spread-value" class="badge-value">-</div>
               </div>
               <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
-                💡 <b>Regla del Piloto:</b> Si la temperatura y el rocío difieren en <b>2°C o menos</b>, la humedad supera el 95%. ¡Peligro de formación inminente de niebla de radiación en pista!
+                💡 <b>Regla del Piloto:</b> Si la temperatura y el rocío difieren en <b>2°C o menos</b>, la humedad
+                supera el 95%. ¡Peligro de formación inminente de niebla de radiación en pista!
               </p>
             </div>
           </div>
@@ -142,7 +164,8 @@
       <section class="glass-card">
         <h2 class="card-title">📻 Radiodifusión ATIS Simulada</h2>
         <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-          Entrena tu oído aeronáutico escuchando el reporte codificado en el formato oficial tal como lo transmiten los operadores y computadoras de torre utilizando el alfabeto fonético y números dictados en español.
+          Entrena tu oído aeronáutico escuchando el reporte codificado en el formato oficial tal como lo transmiten los
+          operadores y computadoras de torre utilizando el alfabeto fonético y números dictados en español.
         </p>
 
         <div class="atis-control-panel">
@@ -162,7 +185,7 @@
             </button>
           </div>
         </div>
-        
+
         <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 14px;">
           🔊 <i>Nota: Se reproduce con efectos mecánicos de interferencia radioeléctrica de transmisión real.</i>
         </p>
@@ -172,14 +195,15 @@
     <!-- ================= VIEW 3: ENTRENADOR / MINI-JUEGO (🎓) ================= -->
     <main id="view-quiz" class="app-view hidden-element">
       <section class="glass-card">
-        
+
         <div class="quiz-header">
           <h2 class="card-title" style="margin-bottom: 0;">🎓 Academia METAR</h2>
           <span id="quiz-score-val" class="quiz-score-badge">0 / 0</span>
         </div>
 
         <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
-          Pon a prueba tus habilidades para el examen de licencia de piloto. Interpreta el reporte meteorológico aeronáutico provisto y responde correctamente la pregunta.
+          Pon a prueba tus habilidades para el examen de licencia de piloto. Interpreta el reporte meteorológico
+          aeronáutico provisto y responde correctamente la pregunta.
         </p>
 
         <!-- Código METAR del Problema -->
@@ -216,24 +240,35 @@
       <section class="glass-card">
         <h2 class="card-title">📚 Guía del Piloto (Cheat Sheet)</h2>
         <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-          Tabla de referencia rápida para recordar los códigos de aviación fundamentales del manual oficial del piloto de planeador.
+          Tabla de referencia rápida para recordar los códigos de aviación fundamentales del manual oficial del piloto
+          de planeador.
         </p>
 
         <div class="cheat-grid">
-          
+
           <!-- Fenómenos de Tiempo -->
           <div>
             <h3 class="cheat-section-title">Fenómenos de Tiempo</h3>
             <div class="cheat-list">
-              <div class="cheat-item"><span class="cheat-code">TS</span><span class="cheat-desc">Tormenta (Thunderstorm)</span></div>
-              <div class="cheat-item"><span class="cheat-code">RA</span><span class="cheat-desc">Lluvia (Rain)</span></div>
-              <div class="cheat-item"><span class="cheat-code">DZ</span><span class="cheat-desc">Llovizna (Drizzle)</span></div>
-              <div class="cheat-item"><span class="cheat-code">SN</span><span class="cheat-desc">Nieve (Snow)</span></div>
-              <div class="cheat-item"><span class="cheat-code">GR</span><span class="cheat-desc">Granizo (Hail)</span></div>
-              <div class="cheat-item"><span class="cheat-code">BR</span><span class="cheat-desc">Neblina (Mist - Vis >= 1km)</span></div>
-              <div class="cheat-item"><span class="cheat-code">FG</span><span class="cheat-desc">Niebla (Fog - Vis < 1km)</span></div>
-              <div class="cheat-item"><span class="cheat-code">HZ</span><span class="cheat-desc">Bruma (Haze)</span></div>
-              <div class="cheat-item"><span class="cheat-code">FU</span><span class="cheat-desc">Humo (Smoke)</span></div>
+              <div class="cheat-item"><span class="cheat-code">TS</span><span class="cheat-desc">Tormenta
+                  (Thunderstorm)</span></div>
+              <div class="cheat-item"><span class="cheat-code">RA</span><span class="cheat-desc">Lluvia (Rain)</span>
+              </div>
+              <div class="cheat-item"><span class="cheat-code">DZ</span><span class="cheat-desc">Llovizna
+                  (Drizzle)</span></div>
+              <div class="cheat-item"><span class="cheat-code">SN</span><span class="cheat-desc">Nieve (Snow)</span>
+              </div>
+              <div class="cheat-item"><span class="cheat-code">GR</span><span class="cheat-desc">Granizo (Hail)</span>
+              </div>
+              <div class="cheat-item"><span class="cheat-code">BR</span><span class="cheat-desc">Neblina (Mist - Vis >=
+                  1km)</span></div>
+              <div class="cheat-item"><span class="cheat-code">FG</span><span class="cheat-desc">Niebla (Fog - Vis <
+                    1km)</span>
+              </div>
+              <div class="cheat-item"><span class="cheat-code">HZ</span><span class="cheat-desc">Bruma (Haze)</span>
+              </div>
+              <div class="cheat-item"><span class="cheat-code">FU</span><span class="cheat-desc">Humo (Smoke)</span>
+              </div>
             </div>
           </div>
 
@@ -241,15 +276,24 @@
           <div>
             <h3 class="cheat-section-title">Intensidad y Capas</h3>
             <div class="cheat-list">
-              <div class="cheat-item"><span class="cheat-code">-</span><span class="cheat-desc">Ligera (Light)</span></div>
-              <div class="cheat-item"><span class="cheat-code">+</span><span class="cheat-desc">Fuerte (Heavy)</span></div>
-              <div class="cheat-item"><span class="cheat-code">VC</span><span class="cheat-desc">En las cercanías (Vicinity)</span></div>
-              <div class="cheat-item"><span class="cheat-code">FEW</span><span class="cheat-desc">Escasas (1/8 a 2/8 de cielo)</span></div>
-              <div class="cheat-item"><span class="cheat-code">SCT</span><span class="cheat-desc">Dispersas (3/8 a 4/8 de cielo)</span></div>
-              <div class="cheat-item"><span class="cheat-code">BKN</span><span class="cheat-desc">Fragmentadas (Techo, 5-7/8)</span></div>
-              <div class="cheat-item"><span class="cheat-code">OVC</span><span class="cheat-desc">Cielo Cubierto (Techo, 8/8)</span></div>
-              <div class="cheat-item"><span class="cheat-code">CB</span><span class="cheat-desc">Cumulonimbus (¡Extremo!)</span></div>
-              <div class="cheat-item"><span class="cheat-code">TCU</span><span class="cheat-desc">Towering Cumulus (Turbulencia)</span></div>
+              <div class="cheat-item"><span class="cheat-code">-</span><span class="cheat-desc">Ligera (Light)</span>
+              </div>
+              <div class="cheat-item"><span class="cheat-code">+</span><span class="cheat-desc">Fuerte (Heavy)</span>
+              </div>
+              <div class="cheat-item"><span class="cheat-code">VC</span><span class="cheat-desc">En las cercanías
+                  (Vicinity)</span></div>
+              <div class="cheat-item"><span class="cheat-code">FEW</span><span class="cheat-desc">Escasas (1/8 a 2/8 de
+                  cielo)</span></div>
+              <div class="cheat-item"><span class="cheat-code">SCT</span><span class="cheat-desc">Dispersas (3/8 a 4/8
+                  de cielo)</span></div>
+              <div class="cheat-item"><span class="cheat-code">BKN</span><span class="cheat-desc">Fragmentadas (Techo,
+                  5-7/8)</span></div>
+              <div class="cheat-item"><span class="cheat-code">OVC</span><span class="cheat-desc">Cielo Cubierto (Techo,
+                  8/8)</span></div>
+              <div class="cheat-item"><span class="cheat-code">CB</span><span class="cheat-desc">Cumulonimbus
+                  (¡Extremo!)</span></div>
+              <div class="cheat-item"><span class="cheat-code">TCU</span><span class="cheat-desc">Towering Cumulus
+                  (Turbulencia)</span></div>
             </div>
           </div>
 
@@ -263,7 +307,7 @@
         <span class="nav-icon">📡</span>
         <span class="nav-label">Consulta</span>
       </button>
-      
+
       <button class="nav-btn" data-view="view-audio">
         <span class="nav-icon">📢</span>
         <span class="nav-label">ATIS Radio</span>
@@ -285,4 +329,5 @@
   <!-- Cargar motor de la app -->
   <script src="app.js"></script>
 </body>
+
 </html>
