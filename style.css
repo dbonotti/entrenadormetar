@@ -1,0 +1,828 @@
+/* --- IMPORTAR FUENTES MODERNAS --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
+
+/* --- DECLARACIONES DE VARIABLES (TEMA OSCURO PREMIUM) --- */
+:root {
+  --font-header: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  
+  /* Paleta de colores de aviación */
+  --bg-deep: #060913;
+  --bg-space: radial-gradient(circle at 50% 50%, #0d1527 0%, #060812 100%);
+  --card-glass: rgba(15, 23, 42, 0.45);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-border-active: rgba(59, 130, 246, 0.4);
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Colores de categorías de vuelo OACI */
+  --color-vfr: #10b981;
+  --color-vfr-glow: rgba(16, 185, 129, 0.25);
+  --color-mvfr: #3b82f6;
+  --color-mvfr-glow: rgba(59, 130, 246, 0.25);
+  --color-ifr: #ef4444;
+  --color-ifr-glow: rgba(239, 68, 68, 0.25);
+  --color-lifr: #a855f7;
+  --color-lifr-glow: rgba(168, 85, 247, 0.25);
+  
+  --accent: #2563eb;
+  --accent-glow: rgba(37, 99, 235, 0.35);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- REGLAS GENERALES Y RESET --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-space);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+  padding-bottom: 90px; /* Espacio para barra de navegación móvil */
+}
+
+/* --- ESTRUCTURA GENERAL DE LA APLICACIÓN --- */
+.app-container {
+  max-width: 768px; /* Optimizado para lectura tipo celular / tablet central */
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* --- CABECERA SUPERIOR --- */
+.app-header {
+  text-align: center;
+  padding: 24px 0 16px 0;
+  border-bottom: 1px solid var(--card-border);
+  margin-bottom: 24px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.logo-icon {
+  font-size: 28px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.app-title {
+  font-family: var(--font-header);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 40%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* --- CARDS CON ESTILO GLASSMORPHISM --- */
+.glass-card {
+  background: var(--card-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.card-title {
+  font-family: var(--font-header);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 3px solid var(--accent);
+  padding-left: 8px;
+}
+
+/* --- SELECTORES DE FIR Y AERODROMOS --- */
+.selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.styled-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.styled-select {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-header);
+  font-size: 15px;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition-smooth);
+}
+
+.styled-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.styled-select-wrapper::after {
+  content: '▼';
+  font-size: 10px;
+  color: var(--text-secondary);
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Rejilla de Aeropuertos */
+.airport-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Personalizar Scroll de Aeropuertos */
+.airport-grid::-webkit-scrollbar,
+.token-explanations::-webkit-scrollbar {
+  width: 6px;
+}
+.airport-grid::-webkit-scrollbar-thumb,
+.token-explanations::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.airport-pill-card {
+  background: rgba(30, 41, 59, 0.35);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: var(--transition-smooth);
+}
+
+.airport-pill-card:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.oaci-code {
+  font-family: var(--font-header);
+  font-weight: 700;
+  font-size: 14px;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.apt-name-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.apt-title-name {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apt-city {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* --- INGRESO MANUAL --- */
+.input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.styled-textarea {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 14px;
+  resize: none;
+  height: 48px;
+  outline: none;
+  transition: var(--transition-smooth);
+}
+
+.styled-textarea:focus {
+  border-color: var(--accent);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  padding: 0 16px;
+  font-family: var(--font-header);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
+}
+
+.btn-secondary {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  padding: 12px;
+  font-family: var(--font-header);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-secondary:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- SECCIÓN DE RESULTADO Y CABECERAS --- */
+.result-header-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.station-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.decoded-title {
+  font-family: var(--font-header);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.decoded-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Categoría de Vuelo Badges */
+.flight-category-badge {
+  font-family: var(--font-header);
+  font-weight: 800;
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  animation: pulse-glow 2s infinite alternate;
+}
+
+.cat-vfr {
+  background: var(--color-vfr);
+  color: #022c22;
+  box-shadow: 0 0 15px var(--color-vfr-glow);
+}
+.cat-mvfr {
+  background: var(--color-mvfr);
+  color: #031b4e;
+  box-shadow: 0 0 15px var(--color-mvfr-glow);
+}
+.cat-ifr {
+  background: var(--color-ifr);
+  color: #450a0a;
+  box-shadow: 0 0 15px var(--color-ifr-glow);
+}
+.cat-lifr {
+  background: var(--color-lifr);
+  color: #3b0764;
+  box-shadow: 0 0 15px var(--color-lifr-glow);
+}
+
+/* --- TOKENIZADOR DE METAR INTERACTIVO --- */
+.raw-metar-box {
+  background: #020617;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 16px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  line-height: 2;
+  text-align: center;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+  margin-bottom: 20px;
+}
+
+.interactive-token {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #93c5fd;
+  transition: var(--transition-smooth);
+}
+
+.interactive-token:hover {
+  background: rgba(59, 130, 246, 0.25);
+  color: white;
+  transform: scale(1.05);
+}
+
+.token-active {
+  background: #2563eb !important;
+  color: white !important;
+  box-shadow: 0 0 10px rgba(37,99,235,0.6);
+  transform: scale(1.05);
+}
+
+/* Tarjetas de Explicaciones */
+.token-explanations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.token-explanation-card {
+  background: rgba(30, 41, 59, 0.25);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.token-explanation-card:hover {
+  background: rgba(30, 41, 59, 0.45);
+}
+
+.card-active {
+  border-color: var(--accent) !important;
+  background: rgba(37, 99, 235, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.15);
+}
+
+.token-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.token-card-code {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.token-card-title {
+  font-family: var(--font-header);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.token-card-body {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* --- GRÁFICOS E INSTRUMENTACIÓN --- */
+.gauges-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media(min-width: 600px) {
+  .gauges-layout {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.gauge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-widget {
+  background: #020617;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+/* Detalles del termómetro */
+.thermometer-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+  width: 100%;
+}
+
+.thermo-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.thermo-badge {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+}
+
+.badge-label {
+  font-size: 9px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.badge-value {
+  font-family: var(--font-header);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* --- PANEL DE REPRODUCCIÓN ATIS (RADIO RETRO) --- */
+.atis-control-panel {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 2px solid #334155;
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.atis-control-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #ef4444, #3b82f6, #10b981);
+}
+
+.radio-screen {
+  background: #020617;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-family: monospace;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.9);
+}
+
+.radio-frequency {
+  color: #fca5a5;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.radio-status {
+  color: #94a3b8;
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.radio-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-radio {
+  background: #334155;
+  border: 1px solid #475569;
+  border-radius: 12px;
+  color: white;
+  font-family: var(--font-header);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition-smooth);
+}
+
+.btn-radio:hover {
+  background: #475569;
+}
+
+.btn-playing {
+  background: #ef4444 !important;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  animation: pulse-border 1.5s infinite;
+}
+
+/* --- SECCIÓN MINI-JUEGO (QUIZ) --- */
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.quiz-score-badge {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid var(--accent);
+  color: #60a5fa;
+  font-family: var(--font-header);
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+
+.quiz-metar-card {
+  background: #020617;
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: bold;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  text-align: center;
+  margin-bottom: 20px;
+  color: #38bdf8;
+}
+
+.quiz-options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.quiz-option-btn {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.quiz-option-btn:hover {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateX(3px);
+}
+
+.option-correct {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: var(--color-vfr) !important;
+  color: #34d399 !important;
+  font-weight: 600;
+}
+
+.option-wrong {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: var(--color-ifr) !important;
+  color: #f87171 !important;
+}
+
+.explanation-alert {
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+/* --- CHEAT SHEET / GUÍA RÁPIDA --- */
+.cheat-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media(min-width: 500px) {
+  .cheat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cheat-section-title {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.cheat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.cheat-item {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(30, 41, 59, 0.25);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+}
+
+.cheat-code {
+  font-family: monospace;
+  font-weight: bold;
+  color: #38bdf8;
+}
+
+.cheat-desc {
+  color: var(--text-secondary);
+}
+
+/* --- BARRA DE NAVEGACIÓN MÓVIL --- */
+.mobile-nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  z-index: 1000;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.nav-icon {
+  font-size: 20px;
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  font-family: var(--font-header);
+}
+
+.nav-active {
+  color: #60a5fa !important;
+}
+
+/* --- UTILERIAS --- */
+.hidden-element {
+  display: none !important;
+}
+
+.app-loader {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 23, 42, 0.9);
+  padding: 20px 40px;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+  text-align: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  margin: 0 auto 12px auto;
+  animation: spin 1s linear infinite;
+}
+
+/* --- ANIMACIONES KEYFRAMES --- */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(1); box-shadow: 0 0 8px rgba(255,255,255,0.05); }
+  100% { transform: scale(1.02); }
+}
+
+@keyframes pulse-border {
+  0% { border-color: #334155; }
+  50% { border-color: #ef4444; }
+  100% { border-color: #334155; }
+}
