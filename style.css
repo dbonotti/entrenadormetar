@@ -91,6 +91,19 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+.app-version {
+  font-family: var(--font-header);
+  font-size: 10px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #dbeafe;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(29, 78, 216, 0.15);
+  align-self: center;
+  margin-top: 2px;
+}
+
 .app-subtitle {
   font-size: 13px;
   color: var(--text-secondary);
