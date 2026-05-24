@@ -1160,14 +1160,17 @@ class MetarGauges {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, width, height);
 
+    // Escalar los niveles según la altura real del canvas (referencia original: 250px)
+    const scaleY = height / 250;
+
     // Líneas de escala de altura (Pies: 0, 1000, 2000, 5000, 10000)
     const levels = [
-      { feet: 10000, y: 30 },
-      { feet: 7000, y: 70 },
-      { feet: 4000, y: 120 },
-      { feet: 2000, y: 170 },
-      { feet: 500, y: 220 },
-      { feet: 0, y: 245 }
+      { feet: 10000, y: 30 * scaleY },
+      { feet: 7000, y: 70 * scaleY },
+      { feet: 4000, y: 120 * scaleY },
+      { feet: 2000, y: 170 * scaleY },
+      { feet: 500, y: 220 * scaleY },
+      { feet: 0, y: 245 * scaleY }
     ];
 
     ctx.strokeStyle = "rgba(15, 23, 42, 0.15)";
@@ -1195,8 +1198,8 @@ class MetarGauges {
     // Dibujar las capas nubosas reales
     // Mapear pies a coordenadas Y usando interpolación lineal simple
     const feetToY = (ft) => {
-      if (ft <= 0) return 245;
-      if (ft >= 10000) return 30;
+      if (ft <= 0) return 245 * scaleY;
+      if (ft >= 10000) return 30 * scaleY;
 
       // Encontrar segmento
       for (let i = 0; i < levels.length - 1; i++) {
@@ -1207,7 +1210,7 @@ class MetarGauges {
           return bot.y - ratio * (bot.y - top.y);
         }
       }
-      return 245;
+      return 245 * scaleY;
     };
 
     let hasActualClouds = false;
@@ -1231,12 +1234,21 @@ class MetarGauges {
         // Dibujar cumulonimbus especial
         if (cloud.special === "CB") {
           ctx.beginPath();
+          
+          // Mapear coordenadas X originales (90 a 310) al área segura de dibujo
+          const mapX = (x) => {
+            const minRef = 90;
+            const maxRef = 310;
+            const ratio = (x - minRef) / (maxRef - minRef);
+            return 70 + ratio * (width - 90); // Mapea de forma segura a [70, width - 20]
+          };
+
           // Forma de yunque gigante
-          ctx.moveTo(100, cyY + 15);
-          ctx.bezierCurveTo(90, cyY - 20, 130, cyY - 50, 180, cyY - 40);
-          ctx.bezierCurveTo(220, cyY - 50, 270, cyY - 45, 290, cyY - 10);
-          ctx.bezierCurveTo(310, cyY + 10, 280, cyY + 30, 240, cyY + 25);
-          ctx.bezierCurveTo(220, cyY + 35, 140, cyY + 35, 100, cyY + 15);
+          ctx.moveTo(mapX(100), cyY + 15 * scaleY);
+          ctx.bezierCurveTo(mapX(90), cyY - 20 * scaleY, mapX(130), cyY - 50 * scaleY, mapX(180), cyY - 40 * scaleY);
+          ctx.bezierCurveTo(mapX(220), cyY - 50 * scaleY, mapX(270), cyY - 45 * scaleY, mapX(290), cyY - 10 * scaleY);
+          ctx.bezierCurveTo(mapX(310), cyY + 10 * scaleY, mapX(280), cyY + 30 * scaleY, mapX(240), cyY + 25 * scaleY);
+          ctx.bezierCurveTo(mapX(220), cyY + 35 * scaleY, mapX(140), cyY + 35 * scaleY, mapX(100), cyY + 15 * scaleY);
           ctx.closePath();
           ctx.fill();
 
@@ -1249,15 +1261,14 @@ class MetarGauges {
           ctx.strokeStyle = "rgba(234, 88, 12, 0.8)";
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.moveTo(170, cyY + 25);
-          ctx.lineTo(165, cyY + 40);
-          ctx.lineTo(175, cyY + 45);
-          ctx.lineTo(170, cyY + 60);
+          ctx.moveTo(mapX(170), cyY + 25 * scaleY);
+          ctx.lineTo(mapX(165), cyY + 40 * scaleY);
+          ctx.lineTo(mapX(175), cyY + 45 * scaleY);
+          ctx.lineTo(mapX(170), cyY + 60 * scaleY);
           ctx.stroke();
 
-          ctx.fillStyle = "#b91c1c";
-          ctx.font = "bold 9px Outfit";
-          ctx.fillText("CB (Cumulonimbus)", 200, cyY - 15);
+          // La leyenda anterior 'CB (Cumulonimbus)' roja queda removida para evitar desbordes,
+          // se integra limpiamente en la etiqueta abreviada de la capa (ej: BKN (CB) @ 3.000 ft)
         } else {
           // Nube normal de segmentos
           ctx.beginPath();
@@ -1277,18 +1288,43 @@ class MetarGauges {
           ctx.stroke();
         }
 
-        // Etiqueta de la capa
+        // Etiqueta de la capa (Alineada a la derecha para evitar desbordes)
+        ctx.save();
         ctx.fillStyle = "#0f172a";
         ctx.font = "bold 10px Outfit";
-        ctx.fillText(`${cloud.type} @ ${cloud.height.toLocaleString()} ft`, width - 110, cyY - 12);
+        ctx.textAlign = "right";
+        let labelText = `${cloud.type} @ ${cloud.height.toLocaleString()} ft`;
+        if (cloud.special) {
+          labelText = `${cloud.type} (${cloud.special}) @ ${cloud.height.toLocaleString()} ft`;
+        }
+        ctx.fillText(labelText, width - 20, cyY - 14 * scaleY);
+        ctx.restore();
       }
     });
 
     if (!hasActualClouds) {
+      ctx.save();
       ctx.fillStyle = "#0369a1";
       ctx.textAlign = "center";
-      ctx.font = "bold 13px Outfit";
-      ctx.fillText("SIN NUBES SIGNIFICATIVAS / CELESTE DESPEJADO", width / 2 + 20, height / 2);
+      ctx.font = "bold 12px Outfit";
+      
+      const centerX = 60 + (width - 75) / 2; // Centro exacto del área de cielo
+      
+      // Texto adaptado al tipo de condición despejada (más corto y en 2 líneas estilizadas)
+      let line1 = "SIN NUBES";
+      let line2 = "SIGNIFICATIVAS";
+      
+      if (cloudsList.length > 0) {
+        const first = cloudsList[0];
+        if (first.type === "CLR" || first.type === "SKC") {
+          line1 = "CELESTE";
+          line2 = "DESPEJADO";
+        }
+      }
+      
+      ctx.fillText(line1, centerX, height / 2 - 8 * scaleY);
+      ctx.fillText(line2, centerX, height / 2 + 8 * scaleY);
+      ctx.restore();
     }
   }
 
