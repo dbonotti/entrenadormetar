@@ -156,38 +156,7 @@
 
     </main>
 
-    <!-- ================= VIEW 2: RADIO ATIS (📢) ================= -->
-    <main id="view-audio" class="app-view hidden-element">
-      <section class="glass-card">
-        <h2 class="card-title">📻 Radiodifusión ATIS Simulada</h2>
-        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-          Entrena tu oído aeronáutico escuchando el reporte codificado en el formato oficial tal como lo transmiten los
-          operadores y computadoras de torre utilizando el alfabeto fonético y números dictados en español.
-        </p>
 
-        <div class="atis-control-panel">
-          <!-- Pantalla retro de la radio -->
-          <div class="radio-screen">
-            <div class="radio-frequency">127.60 MHz</div>
-            <div class="radio-status">ATIS ACTIVO - SEÑAL VHF</div>
-          </div>
-
-          <!-- Botones de la radio -->
-          <div class="radio-buttons">
-            <button id="play-atis-btn" class="btn-radio">
-              📻 Escuchar ATIS (Audio)
-            </button>
-            <button id="stop-atis-btn" class="btn-radio" style="background: #ef4444; border-color: #fca5a5;">
-              ⏹️ Detener
-            </button>
-          </div>
-        </div>
-
-        <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 14px;">
-          🔊 <i>Nota: Se reproduce con efectos mecánicos de interferencia radioeléctrica de transmisión real.</i>
-        </p>
-      </section>
-    </main>
 
     <!-- ================= VIEW 3: ENTRENADOR / MINI-JUEGO (🎓) ================= -->
     <main id="view-quiz" class="app-view hidden-element">
@@ -241,59 +210,13 @@
           de planeador.
         </p>
 
-        <div class="cheat-grid">
+        <!-- Buscador de la Guía -->
+        <div class="search-wrapper" style="position: relative; margin-bottom: 20px;">
+          <input type="text" id="guide-search" class="styled-textarea" style="height: 48px; width: 100%; padding-left: 40px;" placeholder="🔍 Buscar código o significado... (ej: CB, lluvia)">
+        </div>
 
-          <!-- Fenómenos de Tiempo -->
-          <div>
-            <h3 class="cheat-section-title">Fenómenos de Tiempo</h3>
-            <div class="cheat-list">
-              <div class="cheat-item"><span class="cheat-code">TS</span><span class="cheat-desc">Tormenta
-                  (Thunderstorm)</span></div>
-              <div class="cheat-item"><span class="cheat-code">RA</span><span class="cheat-desc">Lluvia (Rain)</span>
-              </div>
-              <div class="cheat-item"><span class="cheat-code">DZ</span><span class="cheat-desc">Llovizna
-                  (Drizzle)</span></div>
-              <div class="cheat-item"><span class="cheat-code">SN</span><span class="cheat-desc">Nieve (Snow)</span>
-              </div>
-              <div class="cheat-item"><span class="cheat-code">GR</span><span class="cheat-desc">Granizo (Hail)</span>
-              </div>
-              <div class="cheat-item"><span class="cheat-code">BR</span><span class="cheat-desc">Neblina (Mist - Vis >=
-                  1km)</span></div>
-              <div class="cheat-item"><span class="cheat-code">FG</span><span class="cheat-desc">Niebla (Fog - Vis <
-                    1km)</span>
-              </div>
-              <div class="cheat-item"><span class="cheat-code">HZ</span><span class="cheat-desc">Bruma (Haze)</span>
-              </div>
-              <div class="cheat-item"><span class="cheat-code">FU</span><span class="cheat-desc">Humo (Smoke)</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Intensidades y Descriptores -->
-          <div>
-            <h3 class="cheat-section-title">Intensidad y Capas</h3>
-            <div class="cheat-list">
-              <div class="cheat-item"><span class="cheat-code">-</span><span class="cheat-desc">Ligera (Light)</span>
-              </div>
-              <div class="cheat-item"><span class="cheat-code">+</span><span class="cheat-desc">Fuerte (Heavy)</span>
-              </div>
-              <div class="cheat-item"><span class="cheat-code">VC</span><span class="cheat-desc">En las cercanías
-                  (Vicinity)</span></div>
-              <div class="cheat-item"><span class="cheat-code">FEW</span><span class="cheat-desc">Escasas (1/8 a 2/8 de
-                  cielo)</span></div>
-              <div class="cheat-item"><span class="cheat-code">SCT</span><span class="cheat-desc">Dispersas (3/8 a 4/8
-                  de cielo)</span></div>
-              <div class="cheat-item"><span class="cheat-code">BKN</span><span class="cheat-desc">Fragmentadas (Techo,
-                  5-7/8)</span></div>
-              <div class="cheat-item"><span class="cheat-code">OVC</span><span class="cheat-desc">Cielo Cubierto (Techo,
-                  8/8)</span></div>
-              <div class="cheat-item"><span class="cheat-code">CB</span><span class="cheat-desc">Cumulonimbus
-                  (¡Extremo!)</span></div>
-              <div class="cheat-item"><span class="cheat-code">TCU</span><span class="cheat-desc">Towering Cumulus
-                  (Turbulencia)</span></div>
-            </div>
-          </div>
-
+        <div id="cheat-sheet-dynamic-container">
+          <!-- Se cargará dinámicamente con JS -->
         </div>
       </section>
     </main>
@@ -303,11 +226,6 @@
       <button class="nav-btn nav-active" data-view="view-decode">
         <span class="nav-icon">📡</span>
         <span class="nav-label">Consulta</span>
-      </button>
-
-      <button class="nav-btn" data-view="view-audio">
-        <span class="nav-icon">📢</span>
-        <span class="nav-label">ATIS Radio</span>
       </button>
 
       <button class="nav-btn" data-view="view-quiz">

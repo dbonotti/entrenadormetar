@@ -116,6 +116,56 @@ const AERONAUTICAL_NUMBERS = {
   "6": "seis", "7": "siete", "8": "ocho", "9": "nueve", "/": "barra"
 };
 
+// Base de datos completa para la guía rápida (Cheat Sheet) de aviación
+const QUICK_GUIDE_DATABASE = {
+  "🌧️ Fenómenos de Tiempo (Precipitaciones y Obstrucciones)": [
+    { code: "RA", desc: "Lluvia (Rain)" },
+    { code: "DZ", desc: "Llovizna (Drizzle)" },
+    { code: "SN", desc: "Nieve (Snow)" },
+    { code: "SG", desc: "Cinarra (Snow Grains - Nieve granular)" },
+    { code: "PL", desc: "Hielo granulado (Ice Pellets)" },
+    { code: "GR", desc: "Granizo (Hail)" },
+    { code: "GS", desc: "Graupel (Granizo pequeño / Nieve blanda)" },
+    { code: "BR", desc: "Neblina (Mist - Visibilidad ≥ 1 km)" },
+    { code: "FG", desc: "Niebla (Fog - Visibilidad < 1 km)" },
+    { code: "HZ", desc: "Bruma (Haze)" },
+    { code: "FU", desc: "Humo (Smoke)" },
+    { code: "VA", desc: "Ceniza volcánica (Volcanic Ash)" },
+    { code: "DU", desc: "Polvo generalizado (Widespread Dust)" },
+    { code: "SA", desc: "Arena (Sand)" }
+  ],
+  "🌀 Descriptores y Otros Fenómenos": [
+    { code: "TS", desc: "Tormenta (Thunderstorm)" },
+    { code: "SH", desc: "Chubascos (Showers)" },
+    { code: "FZ", desc: "Superenfriado (Freezing)" },
+    { code: "MI", desc: "Ligeras (Shallow - Capa delgada)" },
+    { code: "BC", desc: "Bancos (Patches)" },
+    { code: "PR", desc: "Parcial (Partial)" },
+    { code: "DR", desc: "Ventisca baja (Low Drifting)" },
+    { code: "BL", desc: "Ventisca alta (Blowing)" },
+    { code: "PO", desc: "Remolinos de polvo (Dust Devils)" },
+    { code: "SQ", desc: "Turbonada (Squall)" },
+    { code: "FC", desc: "Tornado / Tromba marina (Funnel Cloud)" },
+    { code: "SS", desc: "Tempestad de arena (Sandstorm)" },
+    { code: "DS", desc: "Tempestad de polvo (Duststorm)" }
+  ],
+  "☁️ Nubosidad e Intensidad": [
+    { code: "-", desc: "Ligero / Poca intensidad (Light)" },
+    { code: "+", desc: "Fuerte / Gran intensidad (Heavy)" },
+    { code: "VC", desc: "En las cercanías (Vicinity)" },
+    { code: "FEW", desc: "Escasa nubosidad (1/8 a 2/8 de cielo cubierto)" },
+    { code: "SCT", desc: "Nubosidad dispersa (3/8 a 4/8 de cielo cubierto)" },
+    { code: "BKN", desc: "Cielo Fragmentado / Nublado (Techo: 5/8 a 7/8)" },
+    { code: "OVC", desc: "Cielo Cubierto (Techo: 8/8 de cielo)" },
+    { code: "CLR", desc: "Cielo despejado (Clear)" },
+    { code: "NSC", desc: "No se observan nubes significativas" },
+    { code: "NCD", desc: "Ninguna nube detectada (AUTO)" },
+    { code: "VV", desc: "Visibilidad vertical (Cielo invisible)" },
+    { code: "CB", desc: "Cumulonimbus (¡Nube de tormenta, peligro extremo!)" },
+    { code: "TCU", desc: "Cumulus potente (Towering Cumulus - Turbulencia)" }
+  ]
+};
+
 // --- MOTOR DE PARSING Y DECODIFICACIÓN ---
 class MetarParser {
   static parse(metarText) {
@@ -143,6 +193,28 @@ class MetarParser {
     };
 
     let idx = 0;
+    let inTrend = false;
+    let inRemarks = false;
+
+    // Diccionario de palabras clave en remarks para decodificación interactiva nítida
+    const REMARK_WORDS = {
+      "CB": "Cumulonimbus (nubes de tormenta de gran desarrollo vertical)",
+      "OBS": "observado/s",
+      "TO": "hacia el / los",
+      "N": "Norte (N)",
+      "S": "Sur (S)",
+      "E": "Este (E)",
+      "W": "Oeste (W)",
+      "NE": "Nordeste (NE)",
+      "NW": "Noroeste (NW)",
+      "SE": "Sudeste (SE)",
+      "SW": "Sudoeste (SW)",
+      "LN": "Línea (de tormentas o inestabilidad)",
+      "DSNT": "Distante",
+      "VC": "En las cercanías",
+      "ALQDS": "En todas las direcciones",
+      "TS": "Tormenta"
+    };
 
     tokens.forEach((token, tIdx) => {
       let decodedText = "";
@@ -195,7 +267,7 @@ class MetarParser {
 
       // 5. Viento (Dirección, velocidad, ráfagas)
       // Patrones: 18010KT, 23015G25KT, VRB02KT
-      else if (!result.wind && (/^\d{5}(G\d{2})?KT$/.test(token) || /^VRB\d{2}KT$/.test(token))) {
+      else if (/^\d{5}(G\d{2})?KT$/.test(token) || /^VRB\d{2}KT$/.test(token)) {
         const dirStr = token.substring(0, 3);
         const isVrb = dirStr === "VRB";
         const speed = parseInt(token.substring(3, 5));
@@ -206,65 +278,141 @@ class MetarParser {
           gusts = parseInt(token.substring(gustIdx + 1, gustIdx + 3));
         }
 
-        result.wind = {
-          direction: isVrb ? "VRB" : parseInt(dirStr),
-          speed: speed,
-          gusts: gusts
-        };
-
         const dirText = isVrb ? "de dirección variable" : `de los ${dirStr}°`;
         const speedText = `${speed} nudos (KT)${gusts ? ` con ráfagas de hasta ${gusts} nudos` : ""}`;
 
-        // Consejo para pilotos de planeador
-        let gliderTip = "";
-        if (gusts && (gusts - speed >= 10)) {
-          gliderTip = " ⚠️ ¡Alerta! Ráfagas de viento fuertes. Peligro de turbulencia en aproximación.";
-        } else if (speed > 15) {
-          gliderTip = " ⚠️ Viento fuerte. Cuidado con la componente de viento cruzado.";
-        } else if (speed < 5) {
-          gliderTip = " ℹ️ Viento calmo o suave. Ideal para despegues por torno o remolque.";
-        }
+        if (!result.wind && !inTrend) {
+          result.wind = {
+            direction: isVrb ? "VRB" : parseInt(dirStr),
+            speed: speed,
+            gusts: gusts
+          };
 
-        decodedText = `Viento ${dirText} a ${speedText}.${gliderTip}`;
-        title = "Viento";
+          // Consejo para pilotos de planeador
+          let gliderTip = "";
+          if (gusts && (gusts - speed >= 10)) {
+            gliderTip = " ⚠️ ¡Alerta! Ráfagas de viento fuertes. Peligro de turbulencia en aproximación.";
+          } else if (speed > 15) {
+            gliderTip = " ⚠️ Viento fuerte. Cuidado con la componente de viento cruzado.";
+          } else if (speed < 5) {
+            gliderTip = " ℹ️ Viento calmo o suave. Ideal para despegues por torno o remolque.";
+          }
+
+          decodedText = `Viento ${dirText} a ${speedText}.${gliderTip}`;
+          title = "Viento";
+        } else {
+          // Viento pronosticado en sección de tendencia/cambio
+          decodedText = `Viento pronosticado ${dirText} a ${speedText} debido al cambio indicado (tendencia).`;
+          title = "Viento Pronosticado";
+        }
         isMatched = true;
       }
 
       // 5b. Variabilidad del Viento (ej: 180V240)
       else if (/^\d{3}V\d{3}$/.test(token)) {
         const parts = token.split("V");
-        if (result.wind) {
+        if (result.wind && !inTrend) {
           result.wind.variability = { from: parseInt(parts[0]), to: parseInt(parts[1]) };
         }
-        decodedText = `Dirección del viento varía entre los ${parts[0]}° y los ${parts[1]}°`;
-        title = "Variabilidad del Viento";
+        decodedText = inTrend 
+          ? `Variabilidad de dirección del viento pronosticada entre los ${parts[0]}° y los ${parts[1]}°`
+          : `Dirección del viento varía entre los ${parts[0]}° y los ${parts[1]}°`;
+        title = inTrend ? "Variabilidad de Viento Pronosticada" : "Variabilidad del Viento";
         isMatched = true;
       }
 
       // 6. Visibilidad (Metros, Millas, CAVOK)
-      else if (!result.visib && (token === "CAVOK" || /^\d{4}$/.test(token) || /^\d+(\/\d+)?SM$/.test(token))) {
+      else if (token === "CAVOK" || /^\d{4}$/.test(token) || /^\d+(\/\d+)?SM$/.test(token)) {
         if (token === "CAVOK") {
-          result.visib = { value: 9999, cavok: true };
-          decodedText = "CAVOK (Ceiling And Visibility OK): Visibilidad superior a 10 km, sin nubes por debajo de 5,000 pies o del sector mínimo de seguridad, sin cumulonimbus (CB) ni towering cumulus (TCU), y sin fenómenos significativos en el aeródromo.";
-          title = "Visibilidad y Techo OK";
+          if (!result.visib && !inTrend) result.visib = { value: 9999, cavok: true };
+          decodedText = inTrend
+            ? "CAVOK Pronosticado: Visibilidad superior a 10 km, sin nubes por debajo de 5,000 pies o del sector mínimo de seguridad, sin cumulonimbus (CB) ni towering cumulus (TCU), y sin fenómenos significativos en el aeródromo."
+            : "CAVOK (Ceiling And Visibility OK): Visibilidad superior a 10 km, sin nubes por debajo de 5,000 pies o del sector mínimo de seguridad, sin cumulonimbus (CB) ni towering cumulus (TCU), y sin fenómenos significativos en el aeródromo.";
+          title = inTrend ? "Visibilidad y Techo OK Pronosticados" : "Visibilidad y Techo OK";
         } else if (/^\d{4}$/.test(token)) {
           const meters = parseInt(token);
-          result.visib = { value: meters, cavok: false };
+          if (!result.visib && !inTrend) result.visib = { value: meters, cavok: false };
           if (meters === 9999) {
-            decodedText = "Visibilidad de 10 kilómetros o más (Condiciones visuales excelentes)";
+            decodedText = inTrend
+              ? "Visibilidad pronosticada de 10 kilómetros o más (Condiciones visuales excelentes)"
+              : "Visibilidad de 10 kilómetros o más (Condiciones visuales excelentes)";
           } else {
-            decodedText = `Visibilidad horizontal de ${meters} metros (${(meters / 1000).toFixed(1)} km)`;
-            if (meters < 1500) {
+            decodedText = inTrend
+              ? `Visibilidad horizontal pronosticada de ${meters} metros (${(meters / 1000).toFixed(1)} km) debido al cambio indicado.`
+              : `Visibilidad horizontal de ${meters} metros (${(meters / 1000).toFixed(1)} km)`;
+            if (meters < 1500 && !inTrend) {
               decodedText += " ⚠️ ¡Alerta! Visibilidad reducida. Operación IFR obligatoria para aviones de motor, prohibido vuelo de planeadores sin habilitación especial.";
             }
           }
-          title = "Visibilidad";
+          title = inTrend ? "Visibilidad Pronosticada" : "Visibilidad";
         } else {
           // Millas terrestres (EE.UU)
-          result.visib = { value: token, cavok: false };
-          decodedText = `Visibilidad de ${token.replace("SM", "")} millas terrestres (Statute Miles)`;
-          title = "Visibilidad";
+          if (!result.visib && !inTrend) result.visib = { value: token, cavok: false };
+          decodedText = inTrend
+            ? `Visibilidad pronosticada de ${token.replace("SM", "")} millas terrestres (Statute Miles).`
+            : `Visibilidad de ${token.replace("SM", "")} millas terrestres (Statute Miles)`;
+          title = inTrend ? "Visibilidad Pronosticada" : "Visibilidad";
         }
+        isMatched = true;
+      }
+
+      // 6b. Alcance Visual en Pista (RVR - Runway Visual Range, ej: R25/1200D)
+      else if (/^R\d{2}[LCR]?\/[MP]?\d{4}(V[MP]?\d{4})?[UDN]?$/.test(token)) {
+        const parts = token.substring(1).split("/");
+        const runwayStr = parts[0];
+        let rvrData = parts[1];
+        
+        let trend = "";
+        const lastChar = rvrData.charAt(rvrData.length - 1);
+        if (["U", "D", "N"].includes(lastChar)) {
+          trend = lastChar;
+          rvrData = rvrData.substring(0, rvrData.length - 1);
+        }
+        
+        let prefix = "";
+        if (rvrData.startsWith("P")) {
+          prefix = "más de ";
+          rvrData = rvrData.substring(1);
+        } else if (rvrData.startsWith("M")) {
+          prefix = "menos de ";
+          rvrData = rvrData.substring(1);
+        }
+        
+        // Manejar rango variable si existiera (ej: 0800V1200)
+        let rangeText = "";
+        if (rvrData.includes("V")) {
+          const rangeParts = rvrData.split("V");
+          const r1 = parseInt(rangeParts[0]);
+          const r2 = parseInt(rangeParts[1]);
+          rangeText = `variable entre ${r1} y ${r2} metros`;
+        } else {
+          rangeText = `${prefix}${parseInt(rvrData)} metros`;
+        }
+        
+        let runwayName = `Pista ${runwayStr.substring(0, 2)}`;
+        if (runwayStr.endsWith("L")) runwayName += " Izquierda (Left)";
+        else if (runwayStr.endsWith("R")) runwayName += " Derecha (Right)";
+        else if (runwayStr.endsWith("C")) runwayName += " Central (Center)";
+        
+        let trendText = "";
+        if (trend === "D") trendText = ", con tendencia en disminución (Downward)";
+        else if (trend === "U") trendText = ", con tendencia en aumento (Upward)";
+        else if (trend === "N") trendText = ", sin cambios significativos (No change)";
+        
+        decodedText = inTrend
+          ? `Alcance Visual en Pista (RVR) pronosticado para la ${runwayName}: ${rangeText}${trendText}.`
+          : `Alcance Visual en Pista (RVR) para la ${runwayName}: ${rangeText}${trendText}.`;
+        title = inTrend ? "RVR Pronosticado" : "RVR (Alcance Visual en Pista)";
+        
+        if (!result.rvr && !inTrend) result.rvr = [];
+        if (!inTrend) {
+          result.rvr.push({
+            runway: runwayStr,
+            range: rvrData,
+            trend: trend
+          });
+        }
+        
         isMatched = true;
       }
 
@@ -292,9 +440,13 @@ class MetarParser {
         }
 
         const phenText = `${intensity}${decodedPhen.join(" y ")}`;
-        result.weather.push({ token, decoded: phenText });
-        decodedText = `Fenómenos meteorológicos activos: ${phenText}`;
-        title = "Fenómeno";
+        if (!inTrend) {
+          result.weather.push({ token, decoded: phenText });
+        }
+        decodedText = inTrend
+          ? `Fenómenos meteorológicos pronosticados: ${phenText} debido al cambio indicado.`
+          : `Fenómenos meteorológicos activos: ${phenText}`;
+        title = inTrend ? "Fenómeno Pronosticado" : "Fenómeno";
         isMatched = true;
       }
 
@@ -302,10 +454,16 @@ class MetarParser {
       else if (token === "NSC" || token === "NCD" || token === "CLR" || token === "SKC" || /^(FEW|SCT|BKN|OVC|VV)\d{3}(CB|TCU)?$/.test(token)) {
         if (token === "NSC") {
           decodedText = METAR_DICTIONARY.NSC;
-          result.clouds.push({ token, type: "NSC", height: null, special: null, decoded: decodedText });
+          title = inTrend ? "Nubosidad Pronosticada" : "Nubosidad";
+          if (!inTrend) {
+            result.clouds.push({ token, type: "NSC", height: null, special: null, decoded: decodedText });
+          }
         } else if (token === "CLR" || token === "SKC" || token === "NCD") {
           decodedText = METAR_DICTIONARY[token] || "Cielo despejado";
-          result.clouds.push({ token, type: "CLR", height: null, special: null, decoded: decodedText });
+          title = inTrend ? "Nubosidad Pronosticada" : "Nubosidad";
+          if (!inTrend) {
+            result.clouds.push({ token, type: "CLR", height: null, special: null, decoded: decodedText });
+          }
         } else {
           const type = token.substring(0, 3);
           const heightFt = parseInt(token.substring(3, 6)) * 100;
@@ -318,15 +476,22 @@ class MetarParser {
             specialText = " - ¡Towering Cumulus detectados! Fuertes turbulencias térmicas en desarrollo.";
           }
 
-          decodedText = `${METAR_DICTIONARY[type]} a una altura de ${heightFt.toLocaleString()} pies (${Math.round(heightFt * 0.3048)} metros)${specialText}`;
-          result.clouds.push({ token, type, height: heightFt, special, decoded: decodedText });
+          if (inTrend) {
+            const cleanSpecialText = specialText ? specialText.replace(/\.$/, "") : "";
+            decodedText = `Nubosidad pronosticada: ${METAR_DICTIONARY[type]} a una altura de ${heightFt.toLocaleString()} pies (${Math.round(heightFt * 0.3048)} metros)${cleanSpecialText} debido al cambio indicado.`;
+            title = "Nubosidad Pronosticada";
+          } else {
+            decodedText = `${METAR_DICTIONARY[type]} a una altura de ${heightFt.toLocaleString()} pies (${Math.round(heightFt * 0.3048)} metros)${specialText}`;
+            title = "Nubosidad";
+            result.clouds.push({ token, type, height: heightFt, special, decoded: decodedText });
+          }
         }
-        title = "Nubosidad";
+        title = inTrend ? "Nubosidad Pronosticada" : "Nubosidad";
         isMatched = true;
       }
 
       // 9. Temperatura y Punto de Rocío (ej. 12/08, M03/M05)
-      else if (!result.tempDew && /^(M?\d{2})\/(M?\d{2})$/.test(token)) {
+      else if (/^(M?\d{2})\/(M?\d{2})$/.test(token)) {
         const parts = token.split("/");
 
         const parseTemp = (s) => s.startsWith("M") ? -parseInt(s.substring(1)) : parseInt(s);
@@ -337,34 +502,84 @@ class MetarParser {
         const spread = temp - dew;
         const rh = Math.round(100 - (5 * spread)); // Regla empírica del spread de 5% por grado
 
-        result.tempDew = { temp, dew, rh };
-
-        let fogWarning = "";
-        if (spread <= 2 && spread >= 0) {
-          fogWarning = " ⚠️ ¡Alerta de Niebla! Gradiente térmico muy bajo (≤ 2°C). Alta probabilidad de reducción de visibilidad en minutos por formación de niebla por radiación o advección.";
+        if (!result.tempDew && !inTrend) {
+          result.tempDew = { temp, dew, rh };
         }
 
-        decodedText = `Temperatura del aire: ${temp}°C | Punto de Rocío: ${dew}°C (Humedad relativa aprox: ${Math.max(0, Math.min(100, rh))}%).${fogWarning}`;
-        title = "Temperatura y Rocío";
+        if (inTrend) {
+          decodedText = `Temperatura pronosticada: ${temp}°C | Punto de Rocío pronosticado: ${dew}°C (Humedad relativa aprox: ${Math.max(0, Math.min(100, rh))}%).`;
+          title = "Temperatura y Rocío Pronosticados";
+        } else {
+          let fogWarning = "";
+          if (spread <= 2 && spread >= 0) {
+            fogWarning = " ⚠️ ¡Alerta de Niebla! Gradiente térmico muy bajo (≤ 2°C). Alta probabilidad de reducción de visibilidad en minutos por formación de niebla por radiación o advección.";
+          }
+
+          decodedText = `Temperatura del aire: ${temp}°C | Punto de Rocío: ${dew}°C (Humedad relativa aprox: ${Math.max(0, Math.min(100, rh))}%).${fogWarning}`;
+          title = "Temperatura y Rocío";
+        }
         isMatched = true;
       }
 
       // 10. Altimímetro / QNH (ej. Q1028, A2992)
-      else if (!result.altimeter && (/^Q\d{4}$/.test(token) || /^A\d{4}$/.test(token))) {
-        if (token.startsWith("Q")) {
-          const qnh = parseInt(token.substring(1));
-          result.altimeter = { value: qnh, unit: "hPa" };
-          decodedText = `Presión barométrica QNH: ${qnh} Hectopascales (hPa). Calibración del altímetro para leer la altura real sobre el nivel medio del mar.`;
+      else if (/^Q\d{4}$/.test(token) || /^A\d{4}$/.test(token)) {
+        const isQnh = token.startsWith("Q");
+        let val, unit;
+        if (isQnh) {
+          val = parseInt(token.substring(1));
+          unit = "hPa";
         } else {
-          const inhg = parseFloat(token.substring(1)) / 100;
-          result.altimeter = { value: inhg, unit: "inHg" };
-          decodedText = `Presión barométrica altímetro: ${inhg.toFixed(2)} pulgadas de Mercurio (inHg). Usado comúnmente en Norteamérica.`;
+          val = parseFloat(token.substring(1)) / 100;
+          unit = "inHg";
         }
-        title = "QNH / Altimímetro";
+
+        if (!result.altimeter && !inTrend) {
+          result.altimeter = { value: val, unit };
+        }
+
+        if (inTrend) {
+          decodedText = isQnh
+            ? `Presión barométrica QNH pronosticada: ${val} Hectopascales (hPa) debido al cambio indicado.`
+            : `Presión barométrica altímetro pronosticada: ${val.toFixed(2)} pulgadas de Mercurio (inHg) debido al cambio indicado.`;
+          title = "QNH / Altimímetro Pronosticado";
+        } else {
+          decodedText = isQnh
+            ? `Presión barométrica QNH: ${val} Hectopascales (hPa). Calibración del altímetro para leer la altura real sobre el nivel medio del mar.`
+            : `Presión barométrica altímetro: ${val.toFixed(2)} pulgadas de Mercurio (inHg). Usado comúnmente en Norteamérica.`;
+          title = "QNH / Altimímetro";
+        }
         isMatched = true;
       }
 
-      // 11. Cambios / Tendencias (NOSIG)
+      // 11. Indicadores de Cambios / Tendencias (BECMG, TEMPO, INTER, FM, PROB)
+      else if (token === "BECMG" || token === "TEMPO" || token === "INTER" || /^FM\d{6}Z?$/.test(token) || /^FM\d{4}$/.test(token) || /^PROB\d{2}$/.test(token)) {
+        inTrend = true;
+        inRemarks = false; // Trend cancels remarks just in case
+        
+        if (token === "BECMG") {
+          decodedText = "BECMG (Becoming): Inicio de un cambio gradual en las condiciones meteorológicas pronosticadas en las próximas horas.";
+          title = "Cambio Gradual (BECMG)";
+        } else if (token === "TEMPO") {
+          decodedText = "TEMPO (Temporary): Fluctuaciones temporales y periódicas de corta duración (menos de una hora) en las condiciones meteorológicas pronosticadas.";
+          title = "Fluctuación Temporal (TEMPO)";
+        } else if (token === "INTER") {
+          decodedText = "INTER (Intermittent): Variaciones intermitentes y frecuentes de corta duración pronosticadas en las condiciones meteorológicas.";
+          title = "Cambio Intermitente (INTER)";
+        } else if (token.startsWith("FM")) {
+          const timeStr = token.replace("FM", "").replace("Z", "");
+          const hour = timeStr.substring(2, 4) || timeStr.substring(0, 2);
+          const min = timeStr.substring(4, 6) || timeStr.substring(2, 4) || "00";
+          decodedText = `FM (From): Cambio rápido y permanente a partir de las ${hour}:${min} UTC.`;
+          title = "Cambio Permanente (FM)";
+        } else if (token.startsWith("PROB")) {
+          const probVal = token.replace("PROB", "");
+          decodedText = `PROB (Probability): Probabilidad del ${probVal}% de ocurrencia de fenómenos meteorológicos transitorios.`;
+          title = "Probabilidad (PROB)";
+        }
+        isMatched = true;
+      }
+
+      // 11b. NOSIG (No Significant Change)
       else if (token === "NOSIG") {
         result.trend = "NOSIG";
         decodedText = "NOSIG (No Significant Change): No se pronostican cambios significativos en las condiciones climáticas en las próximas 2 horas.";
@@ -372,9 +587,11 @@ class MetarParser {
         isMatched = true;
       }
 
-      // 12. Remarks argentinos o especiales (RMK PP000)
-      else if (token.startsWith("RMK") || (tIdx > 0 && tokens[tIdx - 1] === "RMK") || (tIdx > 1 && tokens[tIdx - 2] === "RMK" && token.startsWith("PP"))) {
-        if (token === "RMK") {
+      // 12. Remarks argentinos o especiales (RMK PP000, etc.)
+      else if (token.startsWith("RMK") || inRemarks || /^PP\d{3}$/.test(token)) {
+        if (token.startsWith("RMK")) {
+          inRemarks = true;
+          inTrend = false;
           decodedText = "RMK (Remarks): Inicio de la sección de comentarios o notas adicionales específicas del país.";
           title = "Inicio de Comentarios";
         } else if (/^PP\d{3}$/.test(token)) {
@@ -382,8 +599,15 @@ class MetarParser {
           decodedText = `PP (Precipitación): Precipitación acumulada en la última hora de ${mm} mm. (Nota específica del Servicio Meteorológico Nacional de Argentina).`;
           title = "Lluvia Acumulada";
         } else {
-          decodedText = `Información adicional de remark del operador: ${token}`;
-          title = "Nota Adicional";
+          // Si estamos en la sección de remarks y es una palabra del vocabulario de remarks
+          const remarkWordLower = token.replace(/=$/, "").toUpperCase();
+          if (REMARK_WORDS[remarkWordLower]) {
+            decodedText = `Información de remark: ${REMARK_WORDS[remarkWordLower]} (Nota del operador en la estación).`;
+            title = "Comentario / Remark";
+          } else {
+            decodedText = `Información adicional de remark del operador: ${token}`;
+            title = "Nota Adicional";
+          }
         }
         isMatched = true;
       }
@@ -1291,31 +1515,150 @@ document.addEventListener("DOMContentLoaded", () => {
     modeFirContainer.classList.add("hidden-element");
   });
 
-  // Preparar el motor de Voz ATIS de forma global
-  const playVoiceBtn = document.getElementById("play-atis-btn");
-  const stopVoiceBtn = document.getElementById("stop-atis-btn");
+  // --- LÓGICA DE LA GUÍA RÁPIDA INTERACTIVA (Buscador y Reproducción) ---
+  let activePlayBtn = null;
 
-  playVoiceBtn.addEventListener("click", () => {
-    if (!currentParsedMetar) {
-      alert("Por favor, primero consulta o decodifica un reporte METAR en la pestaña 'Consulta' para escuchar el ATIS.");
+  function playPhoneticCode(code, buttonElement) {
+    // Si ya está reproduciendo este mismo botón, detener
+    if (activePlayBtn === buttonElement) {
+      speechEngine.stop();
+      buttonElement.classList.remove("btn-play-active");
+      activePlayBtn = null;
       return;
     }
-    const speechText = speechEngine.generateSpeechText(currentParsedMetar);
 
-    playVoiceBtn.classList.add("btn-playing");
-    playVoiceBtn.textContent = "🔊 Emitiendo ATIS...";
+    // Detener cualquier audio previo
+    if (activePlayBtn) {
+      activePlayBtn.classList.remove("btn-play-active");
+    }
 
-    speechEngine.speak(speechText, null, () => {
-      playVoiceBtn.classList.remove("btn-playing");
-      playVoiceBtn.textContent = "📻 Escuchar ATIS (Audio)";
-    });
-  });
-
-  stopVoiceBtn.addEventListener("click", () => {
     speechEngine.stop();
-    playVoiceBtn.classList.remove("btn-playing");
-    playVoiceBtn.textContent = "📻 Escuchar ATIS (Audio)";
-  });
+    activePlayBtn = buttonElement;
+
+    // Generar deletreo fonético aeronáutico
+    let spelledParts = [];
+    const cleanCode = code.trim().toUpperCase();
+
+    for (let char of cleanCode) {
+      if (AERONAUTICAL_ALPHABET[char]) {
+        spelledParts.push(AERONAUTICAL_ALPHABET[char]);
+      } else if (AERONAUTICAL_NUMBERS[char]) {
+        spelledParts.push(AERONAUTICAL_NUMBERS[char]);
+      } else if (char === "-") {
+        spelledParts.push("MENOS");
+      } else if (char === "+") {
+        spelledParts.push("MÁS");
+      } else {
+        spelledParts.push(char);
+      }
+    }
+
+    const spokenText = spelledParts.join(", ");
+    buttonElement.classList.add("btn-play-active");
+
+    // Reproducir a través del motor ATIS (aprovecha la estática de radio y acento de torre)
+    speechEngine.speak(spokenText, null, () => {
+      buttonElement.classList.remove("btn-play-active");
+      if (activePlayBtn === buttonElement) {
+        activePlayBtn = null;
+      }
+    });
+  }
+
+  function renderQuickGuide(searchTerm = "") {
+    const container = document.getElementById("cheat-sheet-dynamic-container");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const cheatGrid = document.createElement("div");
+    cheatGrid.className = "cheat-grid-dynamic";
+
+    let hasMatches = false;
+    const searchLower = searchTerm.trim().toLowerCase();
+
+    for (const [categoryName, items] of Object.entries(QUICK_GUIDE_DATABASE)) {
+      const filteredItems = items.filter(item => {
+        return item.code.toLowerCase().includes(searchLower) || 
+               item.desc.toLowerCase().includes(searchLower);
+      });
+
+      if (filteredItems.length === 0) continue;
+      hasMatches = true;
+
+      const categoryDiv = document.createElement("div");
+      categoryDiv.className = "cheat-category-block";
+
+      const title = document.createElement("h3");
+      title.className = "cheat-section-title";
+      title.textContent = categoryName;
+      categoryDiv.appendChild(title);
+
+      const listDiv = document.createElement("div");
+      listDiv.className = "cheat-list-dynamic";
+
+      filteredItems.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "cheat-item-dynamic";
+        itemDiv.id = `guide-item-${item.code.replace(/[^a-zA-Z0-9-]/g, '')}`;
+
+        const codeWrapper = document.createElement("div");
+        codeWrapper.className = "cheat-code-wrapper";
+
+        const codeSpan = document.createElement("span");
+        codeSpan.className = "cheat-code";
+        codeSpan.textContent = item.code;
+        codeWrapper.appendChild(codeSpan);
+
+        const playBtn = document.createElement("button");
+        playBtn.className = "btn-play-code";
+        playBtn.innerHTML = "🔊";
+        playBtn.title = `Escuchar deletreo de ${item.code}`;
+        playBtn.type = "button";
+
+        playBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          playPhoneticCode(item.code, playBtn);
+        });
+
+        codeWrapper.appendChild(playBtn);
+        itemDiv.appendChild(codeWrapper);
+
+        const descSpan = document.createElement("span");
+        descSpan.className = "cheat-desc";
+        descSpan.textContent = item.desc;
+        itemDiv.appendChild(descSpan);
+
+        listDiv.appendChild(itemDiv);
+      });
+
+      categoryDiv.appendChild(listDiv);
+      cheatGrid.appendChild(categoryDiv);
+    }
+
+    if (!hasMatches) {
+      const noResults = document.createElement("div");
+      noResults.style.textAlign = "center";
+      noResults.style.padding = "30px 10px";
+      noResults.style.color = "var(--text-secondary)";
+      noResults.style.fontSize = "13px";
+      noResults.textContent = "❌ No se encontraron códigos que coincidan con la búsqueda.";
+      container.appendChild(noResults);
+    } else {
+      container.appendChild(cheatGrid);
+    }
+  }
+
+  // Registrar listeners para el input del buscador de la guía
+  const guideSearchInput = document.getElementById("guide-search");
+  if (guideSearchInput) {
+    guideSearchInput.addEventListener("input", (e) => {
+      renderQuickGuide(e.target.value);
+    });
+  }
+
+  // Renderizado inicial por defecto
+  renderQuickGuide("");
 
   // Rellenar selector de FIR
   firSelect.innerHTML = '<option value="-1">--- Selecciona una Región FIR ---</option>';
@@ -1548,6 +1891,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // Si entramos al Quiz, cargamos preguntas
       if (targetView === "view-quiz") {
         initQuizGame();
+      }
+
+      // Si entramos a la Guía Rápida, renderizamos los códigos
+      if (targetView === "view-guide") {
+        renderQuickGuide(guideSearchInput ? guideSearchInput.value : "");
       }
     });
   });
