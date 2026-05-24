@@ -193,47 +193,51 @@ class MetarParser {
         isMatched = true;
       }
 
-      // 5. Viento (Dirección, velocidad, ráfagas, variabilidad)
-      // Patrones: 18010KT, 23015G25KT, VRB02KT, 180V240
-      else if (!result.wind && (/^\d{5}(G\d{2})?KT$/.test(token) || /^VRB\d{2}KT$/.test(token) || /^\d{3}V\d{3}$/.test(token))) {
-        if (/^\d{3}V\d{3}$/.test(token)) {
-          // Variabilidad de dirección (ej: 180V240)
-          const parts = token.split("V");
-          decodedText = `Dirección del viento varía entre los ${parts[0]}° y los ${parts[1]}°`;
-          title = "Variabilidad del Viento";
-        } else {
-          const dirStr = token.substring(0, 3);
-          const isVrb = dirStr === "VRB";
-          const speed = parseInt(token.substring(3, 5));
+      // 5. Viento (Dirección, velocidad, ráfagas)
+      // Patrones: 18010KT, 23015G25KT, VRB02KT
+      else if (!result.wind && (/^\d{5}(G\d{2})?KT$/.test(token) || /^VRB\d{2}KT$/.test(token))) {
+        const dirStr = token.substring(0, 3);
+        const isVrb = dirStr === "VRB";
+        const speed = parseInt(token.substring(3, 5));
 
-          let gusts = null;
-          let gustIdx = token.indexOf("G");
-          if (gustIdx !== -1) {
-            gusts = parseInt(token.substring(gustIdx + 1, gustIdx + 3));
-          }
-
-          result.wind = {
-            direction: isVrb ? "VRB" : parseInt(dirStr),
-            speed: speed,
-            gusts: gusts
-          };
-
-          const dirText = isVrb ? "de dirección variable" : `de los ${dirStr}°`;
-          const speedText = `${speed} nudos (KT)${gusts ? ` con ráfagas de hasta ${gusts} nudos` : ""}`;
-
-          // Consejo para pilotos de planeador
-          let gliderTip = "";
-          if (gusts && (gusts - speed >= 10)) {
-            gliderTip = " ⚠️ ¡Alerta! Ráfagas de viento fuertes. Peligro de turbulencia en aproximación.";
-          } else if (speed > 15) {
-            gliderTip = " ⚠️ Viento fuerte. Cuidado con la componente de viento cruzado.";
-          } else if (speed < 5) {
-            gliderTip = " ℹ️ Viento calmo o suave. Ideal para despegues por torno o remolque.";
-          }
-
-          decodedText = `Viento ${dirText} a ${speedText}.${gliderTip}`;
-          title = "Viento";
+        let gusts = null;
+        let gustIdx = token.indexOf("G");
+        if (gustIdx !== -1) {
+          gusts = parseInt(token.substring(gustIdx + 1, gustIdx + 3));
         }
+
+        result.wind = {
+          direction: isVrb ? "VRB" : parseInt(dirStr),
+          speed: speed,
+          gusts: gusts
+        };
+
+        const dirText = isVrb ? "de dirección variable" : `de los ${dirStr}°`;
+        const speedText = `${speed} nudos (KT)${gusts ? ` con ráfagas de hasta ${gusts} nudos` : ""}`;
+
+        // Consejo para pilotos de planeador
+        let gliderTip = "";
+        if (gusts && (gusts - speed >= 10)) {
+          gliderTip = " ⚠️ ¡Alerta! Ráfagas de viento fuertes. Peligro de turbulencia en aproximación.";
+        } else if (speed > 15) {
+          gliderTip = " ⚠️ Viento fuerte. Cuidado con la componente de viento cruzado.";
+        } else if (speed < 5) {
+          gliderTip = " ℹ️ Viento calmo o suave. Ideal para despegues por torno o remolque.";
+        }
+
+        decodedText = `Viento ${dirText} a ${speedText}.${gliderTip}`;
+        title = "Viento";
+        isMatched = true;
+      }
+
+      // 5b. Variabilidad del Viento (ej: 180V240)
+      else if (/^\d{3}V\d{3}$/.test(token)) {
+        const parts = token.split("V");
+        if (result.wind) {
+          result.wind.variability = { from: parseInt(parts[0]), to: parseInt(parts[1]) };
+        }
+        decodedText = `Dirección del viento varía entre los ${parts[0]}° y los ${parts[1]}°`;
+        title = "Variabilidad del Viento";
         isMatched = true;
       }
 
