@@ -163,6 +163,34 @@ const QUICK_GUIDE_DATABASE = {
     { code: "VV", desc: "Visibilidad vertical (Cielo invisible)" },
     { code: "CB", desc: "Cumulonimbus (¡Nube de tormenta, peligro extremo!)" },
     { code: "TCU", desc: "Cumulus potente (Towering Cumulus - Turbulencia)" }
+  ],
+  "✈️ Alfabeto Aeronáutico": [
+    { code: "A", desc: "Alfa" },
+    { code: "B", desc: "Bravo" },
+    { code: "C", desc: "Charlie" },
+    { code: "D", desc: "Delta" },
+    { code: "E", desc: "Eco" },
+    { code: "F", desc: "Foxtrot" },
+    { code: "G", desc: "Golf" },
+    { code: "H", desc: "Hotel" },
+    { code: "I", desc: "India" },
+    { code: "J", desc: "Juliett" },
+    { code: "K", desc: "Kilo" },
+    { code: "L", desc: "Lima" },
+    { code: "M", desc: "Mike" },
+    { code: "N", desc: "November" },
+    { code: "O", desc: "Oscar" },
+    { code: "P", desc: "Papa" },
+    { code: "Q", desc: "Quebec" },
+    { code: "R", desc: "Romeo" },
+    { code: "S", desc: "Sierra" },
+    { code: "T", desc: "Tango" },
+    { code: "U", desc: "Uniform" },
+    { code: "V", desc: "Victor" },
+    { code: "W", desc: "Whiskey" },
+    { code: "X", desc: "Ex-ray" },
+    { code: "Y", desc: "Yankee" },
+    { code: "Z", desc: "Zulu" }
   ]
 };
 
@@ -691,236 +719,8 @@ class MetarParser {
   }
 }
 
-// --- GENERADOR DE AUDIO ATIS REALISTA ---
-class AtisSpeechEngine {
-  constructor() {
-    this.speechSynth = window.speechSynthesis;
-    this.audioCtx = null;
-  }
+// AtisSpeechEngine eliminado
 
-  // Genera estática realista al inicio y fin (Squelch)
-  async playSquelchSound() {
-    try {
-      if (!this.audioCtx) {
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-
-      const ctx = this.audioCtx;
-      if (ctx.state === 'suspended') {
-        await ctx.resume();
-      }
-
-      const bufferSize = ctx.sampleRate * 0.15; // 150ms
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-
-      // Llenar buffer con ruido blanco
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-
-      // Filtro para hacerlo sonar metálico y áspero
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = 1000;
-      filter.Q.value = 2.0;
-
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      noise.start();
-    } catch (e) {
-      console.warn("AudioContext no disponible o bloqueado por el navegador:", e);
-    }
-  }
-
-  // Convierte un METAR decodificado a texto hablado aeronáutico
-  generateSpeechText(parsed) {
-    let t = [];
-
-    // 1. Cabecera e Identificación
-    const apt = MetarParser.findAirportByOaci(parsed.station);
-    const stationName = apt ? apt.name : parsed.station;
-
-    // Deletrear identificador
-    let spelledStation = "";
-    for (let char of parsed.station) {
-      spelledStation += (AERONAUTICAL_ALPHABET[char] || char) + " ";
-    }
-
-    t.push(`Información meteorológica de ${stationName}, identificador, ${spelledStation}.`);
-
-    // 2. Fecha y Hora
-    if (parsed.dateTime) {
-      t.push(`Observación del día, ${this.spellNumbers(parsed.dateTime.day)}, a las, ${this.spellNumbers(parsed.dateTime.hour)} ${this.spellNumbers(parsed.dateTime.min)} UTC.`);
-    }
-
-    if (parsed.auto) t.push("Reporte automático.");
-
-    // 3. Viento
-    if (parsed.wind) {
-      if (parsed.wind.direction === "VRB") {
-        t.push(`Viento de dirección variable con velocidad de ${this.spellNumbers(parsed.wind.speed.toString())} nudos.`);
-      } else if (parsed.wind.speed === 0) {
-        t.push("Viento en calma.");
-      } else {
-        const dirSpelled = this.spellNumbers(parsed.wind.direction.toString().padStart(3, "0"));
-        const speedSpelled = this.spellNumbers(parsed.wind.speed.toString());
-        t.push(`Viento de los, ${dirSpelled} grados, con, ${speedSpelled} nudos.`);
-        if (parsed.wind.gusts) {
-          t.push(`Ráfagas máximas de, ${this.spellNumbers(parsed.wind.gusts.toString())} nudos.`);
-        }
-      }
-    } else {
-      t.push("Viento no reportado.");
-    }
-
-    // 4. Visibilidad
-    if (parsed.visib) {
-      if (parsed.visib.cavok) {
-        t.push("Condiciones de visibilidad y techo ilimitados. Cabok.");
-      } else if (typeof parsed.visib.value === "number") {
-        if (parsed.visib.value === 9999) {
-          t.push("Visibilidad, diez kilómetros o más.");
-        } else {
-          t.push(`Visibilidad horizontal, ${parsed.visib.value} metros.`);
-        }
-      }
-    }
-
-    // 5. Fenómenos significativos
-    if (parsed.weather.length > 0) {
-      t.push("Condiciones meteorológicas presentes:");
-      parsed.weather.forEach(w => {
-        t.push(`${w.decoded}.`);
-      });
-    }
-
-    // 6. Nubosidad
-    if (parsed.clouds.length > 0) {
-      let isClear = false;
-      parsed.clouds.forEach(c => {
-        if (c.type === "CLR" || c.type === "SKC" || c.type === "NCD" || c.type === "NSC") {
-          isClear = true;
-        }
-      });
-
-      if (isClear) {
-        t.push("Cielo despejado.");
-      } else {
-        t.push("Capa de nubes reportada:");
-        parsed.clouds.forEach(c => {
-          let typeEs = "";
-          if (c.type === "FEW") typeEs = "escasa nubosidad";
-          else if (c.type === "SCT") typeEs = "nubosidad dispersa";
-          else if (c.type === "BKN") typeEs = "cielo mayormente nublado";
-          else if (c.type === "OVC") typeEs = "cielo completamente cubierto";
-          else if (c.type === "VV") typeEs = "visibilidad vertical";
-
-          const htText = c.height ? `${this.spellNumbers(c.height.toString())} pies` : "";
-          const specText = c.special === "CB" ? "cumulonimbus en desarrollo" : c.special === "TCU" ? "cúmulus potente" : "";
-
-          t.push(`${typeEs} a, ${htText}, ${specText}.`);
-        });
-      }
-    }
-
-    // 7. Temperatura y Rocío
-    if (parsed.tempDew) {
-      const parseSpelledTemp = (val) => {
-        if (val < 0) return `menos ${this.spellNumbers(Math.abs(val).toString())}`;
-        return this.spellNumbers(val.toString());
-      };
-      const tSpelled = parseSpelledTemp(parsed.tempDew.temp);
-      const dSpelled = parseSpelledTemp(parsed.tempDew.dew);
-      t.push(`Temperatura, ${tSpelled} grados. Punto de rocío, ${dSpelled} grados.`);
-    }
-
-    // 8. Barómetro QNH
-    if (parsed.altimeter) {
-      if (parsed.altimeter.unit === "hPa") {
-        t.push(`Q N H, ${this.spellNumbers(parsed.altimeter.value.toString())} hectopascales.`);
-      } else {
-        t.push(`Ajuste altimétrico, ${this.spellNumbers(parsed.altimeter.value.toFixed(2).replace(".", ""))} pulgadas.`);
-      }
-    }
-
-    // 9. Tendencia
-    if (parsed.trend === "NOSIG") {
-      t.push("Sin cambios significativos para las próximas dos horas.");
-    }
-
-    t.push("Fin del reporte de torre.");
-    return t.join(" ");
-  }
-
-  spellNumbers(str) {
-    let spelled = [];
-    for (let char of str) {
-      spelled.push(AERONAUTICAL_NUMBERS[char] || char);
-    }
-    return spelled.join(" ");
-  }
-
-  // Ejecuta la lectura de voz con efectos de radio
-  speak(textSpoken, onStart, onEnd) {
-    if (!this.speechSynth) return;
-
-    this.speechSynth.cancel(); // Cancelar cualquier audio previo
-
-    this.playSquelchSound();
-
-    const utterance = new SpeechSynthesisUtterance(textSpoken);
-
-    // Intentar buscar una voz en español de Argentina o España
-    const voices = this.speechSynth.getVoices();
-    let preferredVoice = voices.find(voice => voice.lang.includes('es-AR')) ||
-      voices.find(voice => voice.lang.includes('es-ES')) ||
-      voices.find(voice => voice.lang.startsWith('es'));
-
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-    }
-
-    utterance.lang = 'es-AR';
-    utterance.rate = 0.85; // Hablar pausado y claro como torre de control
-    utterance.pitch = 0.95; // Un tono de radio ligeramente más ronco
-
-    utterance.onstart = () => {
-      if (onStart) onStart();
-    };
-
-    utterance.onend = () => {
-      this.playSquelchSound();
-      if (onEnd) onEnd();
-    };
-
-    utterance.onerror = (e) => {
-      console.error("Error en sintetizador de voz:", e);
-      if (onEnd) onEnd();
-    };
-
-    // Pequeño delay de 200ms para arrancar después de la estática inicial
-    setTimeout(() => {
-      this.speechSynth.speak(utterance);
-    }, 200);
-  }
-
-  stop() {
-    if (this.speechSynth) {
-      this.speechSynth.cancel();
-      this.playSquelchSound();
-    }
-  }
-}
 
 // --- RENDERIZADORES DE GRÁFICOS VISUALES (CANVAS) ---
 class MetarGauges {
@@ -1486,6 +1286,34 @@ class MetarQuiz {
         ],
         answer: 2,
         explanation: "El token 'OVC' significa cielo cubierto (Overcast, 8/8) y el número '025' representa la altura en cientos de pies (25 x 100 = 2,500 pies)."
+      },
+      {
+        type: "text",
+        metar: "METAR SABE 231500Z 07007KT 9999 FEW027 13/06 Q1029 NOSIG RMK PP000 =",
+        question: "Deletrea en alfabeto aeronáutico el identificador de estación 'SABE':",
+        answer: ["Sierra-Alfa-Bravo-Eco", "Sierra Alfa Bravo Eco"],
+        explanation: "El identificador de estación 'SABE' (Aeroparque) se lee utilizando el alfabeto fonético de la aviación como: Sierra-Alfa-Bravo-Eco."
+      },
+      {
+        type: "text",
+        metar: "SPECI SABE 241530Z 27018G30KT 4000 TSRA FEW010 BKN030CB 15/09 Q1008 =",
+        question: "Ingresa el deletreo aeronáutico correspondiente para el código de nubes cumulonimbus 'CB':",
+        answer: ["Charlie-Bravo", "Charly-Bravo", "Charlie Bravo", "Charly Bravo"],
+        explanation: "El código de nubosidad peligrosa 'CB' (Cumulonimbus) se deletrea fonéticamente en aviación como Charlie-Bravo."
+      },
+      {
+        type: "text",
+        metar: "METAR SAZS 152100Z VRB02KT 9999 FEW030 OVC090 08/07 Q1012 =",
+        question: "Deletrea en alfabeto aeronáutico el código de nubosidad escasa 'FEW':",
+        answer: ["Foxtrot-Echo-Whiskey", "Foxtrot Echo Whiskey"],
+        explanation: "El código de nubosidad 'FEW' (pocas nubes) se lee fonéticamente en aviación como Foxtrot-Echo-Whiskey."
+      },
+      {
+        type: "text",
+        metar: "METAR SACO 051400Z 12006KT 2000 BR FG FEW005 SCT015 11/10 Q1022 =",
+        question: "Ingresa el deletreo aeronáutico correspondiente para el código de llovizna 'DZ':",
+        answer: ["Delta-Zulu", "Delta Zulu"],
+        explanation: "El código de precipitación 'DZ' (llovizna) se deletrea fonéticamente en aviación como Delta-Zulu."
       }
     ];
   }
@@ -1501,16 +1329,43 @@ class MetarQuiz {
     return this.questions[this.currentQuestionIdx];
   }
 
-  submitAnswer(answerIdx) {
+  submitAnswer(userAnswer) {
     const q = this.getCurrentQuestion();
-    const isCorrect = q.answer === answerIdx;
-    if (isCorrect) this.score++;
+    
+    if (q.type === "text") {
+      const normalize = (str) => {
+        return str
+          .toLowerCase()
+          .trim()
+          .replace(/[\s-]+/g, "-") // Reemplaza espacios y guiones con un guion simple
+          .replace(/[^a-z0-9-]/g, ""); // Remueve otros caracteres no permitidos
+      };
+      
+      const normalizedUser = normalize(userAnswer);
+      let isCorrect = false;
+      
+      if (Array.isArray(q.answer)) {
+        isCorrect = q.answer.some(ans => normalize(ans) === normalizedUser);
+      } else {
+        isCorrect = normalize(q.answer) === normalizedUser;
+      }
+      
+      if (isCorrect) this.score++;
+      
+      return {
+        isCorrect,
+        explanation: q.explanation
+      };
+    } else {
+      const isCorrect = q.answer === userAnswer;
+      if (isCorrect) this.score++;
 
-    return {
-      isCorrect,
-      correctIdx: q.answer,
-      explanation: q.explanation
-    };
+      return {
+        isCorrect,
+        correctIdx: q.answer,
+        explanation: q.explanation
+      };
+    }
   }
 
   nextQuestion() {
@@ -1521,7 +1376,6 @@ class MetarQuiz {
 
 // --- GESTIÓN DE INTERFAZ Y ESTADO DE LA APP (DOM) ---
 document.addEventListener("DOMContentLoaded", () => {
-  const speechEngine = new AtisSpeechEngine();
   const quizEngine = new MetarQuiz();
   let currentParsedMetar = null;
 
@@ -1551,54 +1405,25 @@ document.addEventListener("DOMContentLoaded", () => {
     modeFirContainer.classList.add("hidden-element");
   });
 
-  // --- LÓGICA DE LA GUÍA RÁPIDA INTERACTIVA (Buscador y Reproducción) ---
-  let activePlayBtn = null;
-
-  function playPhoneticCode(code, buttonElement) {
-    // Si ya está reproduciendo este mismo botón, detener
-    if (activePlayBtn === buttonElement) {
-      speechEngine.stop();
-      buttonElement.classList.remove("btn-play-active");
-      activePlayBtn = null;
-      return;
-    }
-
-    // Detener cualquier audio previo
-    if (activePlayBtn) {
-      activePlayBtn.classList.remove("btn-play-active");
-    }
-
-    speechEngine.stop();
-    activePlayBtn = buttonElement;
-
-    // Generar deletreo fonético aeronáutico
-    let spelledParts = [];
+  // --- LÓGICA DE LA GUÍA RÁPIDA INTERACTIVA (Deletreo fonético al tocar) ---
+  function getAeronauticalSpelling(code) {
     const cleanCode = code.trim().toUpperCase();
-
+    let spelledParts = [];
     for (let char of cleanCode) {
       if (AERONAUTICAL_ALPHABET[char]) {
         spelledParts.push(AERONAUTICAL_ALPHABET[char]);
       } else if (AERONAUTICAL_NUMBERS[char]) {
-        spelledParts.push(AERONAUTICAL_NUMBERS[char]);
+        const numSpelled = AERONAUTICAL_NUMBERS[char];
+        spelledParts.push(numSpelled.charAt(0).toUpperCase() + numSpelled.slice(1));
       } else if (char === "-") {
-        spelledParts.push("MENOS");
+        spelledParts.push("Menos");
       } else if (char === "+") {
-        spelledParts.push("MÁS");
+        spelledParts.push("Más");
       } else {
         spelledParts.push(char);
       }
     }
-
-    const spokenText = spelledParts.join(", ");
-    buttonElement.classList.add("btn-play-active");
-
-    // Reproducir a través del motor ATIS (aprovecha la estática de radio y acento de torre)
-    speechEngine.speak(spokenText, null, () => {
-      buttonElement.classList.remove("btn-play-active");
-      if (activePlayBtn === buttonElement) {
-        activePlayBtn = null;
-      }
-    });
+    return spelledParts.join("-");
   }
 
   function renderQuickGuide(searchTerm = "") {
@@ -1637,6 +1462,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const itemDiv = document.createElement("div");
         itemDiv.className = "cheat-item-dynamic";
         itemDiv.id = `guide-item-${item.code.replace(/[^a-zA-Z0-9-]/g, '')}`;
+        itemDiv.style.cursor = "pointer";
+
+        // Contenedor flex superior
+        const topDiv = document.createElement("div");
+        topDiv.className = "cheat-item-top";
+        topDiv.style.display = "flex";
+        topDiv.style.justifyContent = "space-between";
+        topDiv.style.alignItems = "center";
+        topDiv.style.width = "100%";
 
         const codeWrapper = document.createElement("div");
         codeWrapper.className = "cheat-code-wrapper";
@@ -1645,25 +1479,37 @@ document.addEventListener("DOMContentLoaded", () => {
         codeSpan.className = "cheat-code";
         codeSpan.textContent = item.code;
         codeWrapper.appendChild(codeSpan);
-
-        const playBtn = document.createElement("button");
-        playBtn.className = "btn-play-code";
-        playBtn.innerHTML = "🔊";
-        playBtn.title = `Escuchar deletreo de ${item.code}`;
-        playBtn.type = "button";
-
-        playBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          playPhoneticCode(item.code, playBtn);
-        });
-
-        codeWrapper.appendChild(playBtn);
-        itemDiv.appendChild(codeWrapper);
+        topDiv.appendChild(codeWrapper);
 
         const descSpan = document.createElement("span");
         descSpan.className = "cheat-desc";
         descSpan.textContent = item.desc;
-        itemDiv.appendChild(descSpan);
+        topDiv.appendChild(descSpan);
+
+        itemDiv.appendChild(topDiv);
+
+        // Contenedor del deletreo fonético (inicialmente oculto)
+        const spellingDiv = document.createElement("div");
+        spellingDiv.className = "cheat-spelling hidden-element";
+        
+        // Calcular deletreo
+        const spellingText = getAeronauticalSpelling(item.code);
+        spellingDiv.textContent = `🗣️ Se lee: ${spellingText}`;
+        itemDiv.appendChild(spellingDiv);
+
+        // Click para revelar/ocultar el deletreo
+        itemDiv.addEventListener("click", () => {
+          const isHidden = spellingDiv.classList.contains("hidden-element");
+          
+          // Cerrar otros abiertos para mantener la vista despejada
+          document.querySelectorAll(".cheat-spelling").forEach(div => div.classList.add("hidden-element"));
+          document.querySelectorAll(".cheat-item-dynamic").forEach(div => div.classList.remove("active-card"));
+
+          if (isHidden) {
+            spellingDiv.classList.remove("hidden-element");
+            itemDiv.classList.add("active-card");
+          }
+        });
 
         listDiv.appendChild(itemDiv);
       });
@@ -1961,13 +1807,95 @@ document.addEventListener("DOMContentLoaded", () => {
     quizMetarCode.textContent = q.metar;
     quizScoreDisplay.textContent = `${quizEngine.score} / ${quizEngine.questions.length}`;
 
-    q.options.forEach((opt, idx) => {
-      const li = document.createElement("button");
-      li.className = "quiz-option-btn";
-      li.textContent = opt;
-      li.addEventListener("click", () => selectQuizAnswer(idx));
-      quizOptionsList.appendChild(li);
-    });
+    if (q.type === "text") {
+      // Pregunta táctil interactiva tipo entrada de texto
+      const inputWrapper = document.createElement("div");
+      inputWrapper.className = "quiz-input-wrapper";
+      inputWrapper.style.display = "flex";
+      inputWrapper.style.flexDirection = "column";
+      inputWrapper.style.gap = "12px";
+      inputWrapper.style.marginTop = "10px";
+
+      const textInput = document.createElement("input");
+      textInput.type = "text";
+      textInput.className = "styled-textarea";
+      textInput.style.height = "48px";
+      textInput.style.fontFamily = "var(--font-body)";
+      textInput.style.fontSize = "15px";
+      textInput.placeholder = "Escribe el deletreo (ej: Alfa-Bravo)...";
+      textInput.autofocus = true;
+      inputWrapper.appendChild(textInput);
+
+      const submitBtn = document.createElement("button");
+      submitBtn.className = "btn-primary";
+      submitBtn.style.padding = "14px";
+      submitBtn.style.width = "100%";
+      submitBtn.textContent = "✔️ Verificar Respuesta";
+      submitBtn.type = "button";
+      inputWrapper.appendChild(submitBtn);
+
+      quizOptionsList.appendChild(inputWrapper);
+
+      // Evento al presionar Enter en el teclado
+      textInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && textInput.value.trim() !== "") {
+          e.preventDefault();
+          submitBtn.click();
+        }
+      });
+
+      submitBtn.addEventListener("click", () => {
+        const val = textInput.value.trim();
+        if (!val) {
+          alert("Por favor, escribe una respuesta.");
+          return;
+        }
+
+        textInput.disabled = true;
+        submitBtn.disabled = true;
+
+        const result = quizEngine.submitAnswer(val);
+
+        if (result.isCorrect) {
+          textInput.classList.add("option-correct");
+          
+          const successHint = document.createElement("div");
+          successHint.style.fontSize = "12px";
+          successHint.style.color = "#16a34a";
+          successHint.style.fontWeight = "600";
+          successHint.style.marginTop = "4px";
+          successHint.textContent = `✔️ ¡Excelente! Respuesta correcta.`;
+          inputWrapper.appendChild(successHint);
+        } else {
+          textInput.classList.add("option-wrong");
+          
+          const errorHint = document.createElement("div");
+          errorHint.style.fontSize = "12px";
+          errorHint.style.color = "#dc2626";
+          errorHint.style.fontWeight = "600";
+          errorHint.style.marginTop = "4px";
+          const expectedAnswer = Array.isArray(q.answer) ? q.answer[0] : q.answer;
+          errorHint.textContent = `❌ Incorrecto. Respuesta esperada: ${expectedAnswer}`;
+          inputWrapper.appendChild(errorHint);
+        }
+
+        // Mostrar explicación
+        quizExplanationCard.classList.remove("hidden-element");
+        quizExplanationText.textContent = result.explanation;
+        quizScoreDisplay.textContent = `${quizEngine.score} / ${quizEngine.questions.length}`;
+
+        quizNextBtn.classList.remove("hidden-element");
+      });
+    } else {
+      // Pregunta clásica de opción múltiple
+      q.options.forEach((opt, idx) => {
+        const li = document.createElement("button");
+        li.className = "quiz-option-btn";
+        li.textContent = opt;
+        li.addEventListener("click", () => selectQuizAnswer(idx));
+        quizOptionsList.appendChild(li);
+      });
+    }
   }
 
   function selectQuizAnswer(selectedIndex) {
