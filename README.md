@@ -1,7 +1,7 @@
 # 📡 METAR Decodificador & Entrenador 🪂
 ### ✈️ Brigada 2026 — Aeroclub Punta Alta
 
-Una aplicación web interactiva, moderna y móvil-first, diseñada especialmente para alumnos piloto, pilotos de planeador y entusiastas de la aviación del **Aeroclub Punta Alta**. Permite consultar reportes meteorológicos reales de aeródromos argentinos y decodificarlos interactivamente con explicaciones detalladas e instrumentación gráfica en tiempo real, además de contar con una academia de entrenamiento integrada para dominar la lectura de códigos meteorológicos aeronáuticos.
+Una aplicación web interactiva, moderna y móvil-first, diseñada especialmente para alumnos y pilotos de planeador del **Aeroclub Punta Alta**. Permite consultar reportes meteorológicos reales de aeródromos argentinos y decodificarlos interactivamente con explicaciones detalladas e instrumentación gráfica en tiempo real, además de contar con una academia de entrenamiento integrada para dominar la lectura de códigos meteorológicos aeronáuticos.
 
 ![Versión](https://img.shields.io/badge/Versión-v0.2-blue?style=flat-square)
 ![Stack](https://img.shields.io/badge/Stack-HTML5%20%7C%20CSS3%20%7C%20JS%20Vanilla-emerald?style=flat-square)
@@ -102,6 +102,6 @@ No requiere de ningún proceso complejo de compilación o instalación:
 ---
 
 ## 🛩️ Dedicación
-Este proyecto está dedicado a la **Brigada de Alumnos del año 2026** y a toda la comunidad de pilotos del **Aeroclub Punta Alta** (ubicado en la Provincia de Buenos Aires, Argentina), promoviendo la seguridad aérea en el vuelo sin motor (vuelo en planeador) y en la aviación general mediante una sólida capacitación teórica y práctica.
+Este proyecto está dedicado a la **Brigada de Alumnos del año 2026** y a toda la comunidad de pilotos del **Aeroclub Punta Alta** (ubicado en la Provincia de Buenos Aires, Argentina), promoviendo la seguridad aérea en el vuelo sin motor mediante una sólida capacitación teórica y práctica.
 
-*¡Buenos vuelos y térmicas seguras para todos!* 🌤️🦅
+*¡Buenos vuelos!* 🌤️🦅
