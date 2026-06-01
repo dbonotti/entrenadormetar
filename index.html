@@ -146,7 +146,7 @@
                 <div id="spread-value" class="badge-value">-</div>
               </div>
               <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
-                💡 <b>Regla del Piloto:</b> Si la temperatura y el rocío difieren en <b>2°C o menos</b>, la humedad
+                💡 <b>Atención:</b> Si la temperatura y el rocío difieren en <b>2°C o menos</b>, la humedad
                 supera el 95%. ¡Peligro de formación inminente de niebla de radiación en pista!
               </p>
             </div>
@@ -164,12 +164,12 @@
       <section class="glass-card">
 
         <div class="quiz-header">
-          <h2 class="card-title" style="margin-bottom: 0;">🎓 Academia METAR</h2>
+          <h2 class="card-title" style="margin-bottom: 0;">🎓 Entrenador METAR / Mini-juego</h2>
           <span id="quiz-score-val" class="quiz-score-badge">0 / 0</span>
         </div>
 
         <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
-          ¡A poner a prueba tus habilidades para impresionar a Cristian! Interpreta el reporte meteorológico
+          ¡A poner a prueba tus habilidades! Interpreta el reporte meteorológico
           aeronáutico provisto y responde correctamente la pregunta.
         </p>
 
@@ -222,6 +222,41 @@
         </div>
       </section>
     </main>
+    <!-- ================= VIEW 5: AYUDA (❓) ================= -->
+    <main id="view-help" class="app-view hidden-element">
+      <section class="glass-card">
+        <h2 class="card-title">❓ Ayuda & Contacto</h2>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+          ¿Tienes dudas sobre el funcionamiento de la aplicación o sugerencias para mejorarla? Aquí tienes las opciones disponibles:
+        </p>
+
+        <!-- Bloque 1: GitHub -->
+        <div class="help-card" style="background: #f8fafc; border: 1.5px solid var(--card-border); border-radius: 12px; padding: 18px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px;">
+          <h3 style="font-family: var(--font-header); font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; margin: 0;">
+            📖 Manual y Documentación de Uso
+          </h3>
+          <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            Accede al manual interactivo, instructivos detallados de meteorología y guías de uso que hemos preparado en el repositorio oficial de GitHub de la aplicación.
+          </p>
+          <a href="https://github.com/dbonotti/entrenadormetar#readme" target="_blank" rel="noopener" class="btn-primary" style="display: inline-flex; align-self: flex-start; text-decoration: none; padding: 10px 16px; height: auto; font-size: 13px; margin-top: 6px;">
+            🌐 Ver Ayuda en GitHub
+          </a>
+        </div>
+
+        <!-- Bloque 2: Correo -->
+        <div class="help-card" style="background: #f8fafc; border: 1.5px solid var(--card-border); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+          <h3 style="font-family: var(--font-header); font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; margin: 0;">
+            ✉️ Sugerencias y Propuestas de Cambio
+          </h3>
+          <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            Colabora con el proyecto enviando tus comentarios, reportes de errores en decodificaciones o propuestas de nuevos aeródromos y mejoras al desarrollador.
+          </p>
+          <a href="mailto:dbonotti@gmail.com?subject=METAR%20Entrenador%20-%20Sugerencias%20o%20Cambios" class="btn-primary" style="display: inline-flex; align-self: flex-start; text-decoration: none; padding: 10px 16px; height: auto; font-size: 13px; margin-top: 6px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); box-shadow: 0 4px 12px rgba(3, 105, 161, 0.25);">
+            📧 Solicitar Cambios / Sugerencias
+          </a>
+        </div>
+      </section>
+    </main>
 
     <!-- BARRA DE NAVEGACIÓN MÓVIL INFERIOR -->
     <nav class="mobile-nav-bar">
@@ -238,6 +273,11 @@
       <button class="nav-btn" data-view="view-guide">
         <span class="nav-icon">📚</span>
         <span class="nav-label">Guía Rápida</span>
+      </button>
+
+      <button class="nav-btn" data-view="view-help">
+        <span class="nav-icon">❓</span>
+        <span class="nav-label">Ayuda</span>
       </button>
     </nav>
 
