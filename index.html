@@ -8,6 +8,13 @@
   <title>METAR Decodificador & Entrenador 🪂</title>
   <link rel="stylesheet" href="style.css">
 
+  <!-- Configuración de PWA y Soporte iOS -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="METAR Entrenador">
+  <link rel="apple-touch-icon" href="logo.png">
+
   <!-- SEO e información adicional -->
   <meta name="description"
     content="Aplicación web interactiva móvil para consulta, decodificación y entrenamiento en la lectura e interpretación de reportes metorológicos METAR.">
@@ -229,6 +236,34 @@
         <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
           ¿Tienes dudas sobre el funcionamiento de la aplicación o sugerencias para mejorarla? Aquí tienes las opciones disponibles:
         </p>
+
+        <!-- Bloque 0: Instalar Aplicación (PWA) -->
+        <div id="pwa-install-card" class="help-card hidden-element" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid var(--accent); border-radius: 12px; padding: 18px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 14px rgba(29, 78, 216, 0.15); transition: var(--transition-smooth);">
+          <h3 style="font-family: var(--font-header); font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 700;">
+            📲 ¡Instalar Aplicación en tu Dispositivo!
+          </h3>
+          <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            Instala esta app en tu celular, tablet o computadora para acceder instantáneamente desde la pantalla de inicio y utilizar todas sus funciones <b>completamente sin conexión a internet (offline)</b>.
+          </p>
+          <button id="pwa-install-btn" class="btn-primary" style="display: inline-flex; align-self: flex-start; padding: 12px 20px; font-size: 14px; margin-top: 6px; background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);">
+            📥 Instalar Aplicación
+          </button>
+        </div>
+
+        <!-- Bloque 0.1: Instrucciones iOS (iPhone/iPad) -->
+        <div id="pwa-ios-card" class="help-card hidden-element" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 2px solid #d97706; border-radius: 12px; padding: 18px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.1); transition: var(--transition-smooth);">
+          <h3 style="font-family: var(--font-header); font-size: 15px; color: #b45309; display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 700;">
+            🍏 Instalar en tu iPhone o iPad
+          </h3>
+          <p style="font-size: 12px; color: #78350f; line-height: 1.5; margin: 0;">
+            Para instalar esta app en tu dispositivo iOS (Apple) y usarla sin conexión:
+          </p>
+          <ol style="font-size: 12px; color: #78350f; margin-left: 20px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px;">
+            <li>Abre esta página en el navegador <b>Safari</b>.</li>
+            <li>Toca el botón de <b>Compartir</b> <span style="font-size: 14px;">📤</span> en la barra de navegación de Safari.</li>
+            <li>Desliza hacia abajo y selecciona la opción <b>'Agregar a inicio'</b> <span style="font-size: 14px;">➕</span>.</li>
+          </ol>
+        </div>
 
         <!-- Bloque 1: GitHub -->
         <div class="help-card" style="background: #f8fafc; border: 1.5px solid var(--card-border); border-radius: 12px; padding: 18px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px;">

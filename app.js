@@ -1376,6 +1376,62 @@ class MetarQuiz {
 
 // --- GESTIÓN DE INTERFAZ Y ESTADO DE LA APP (DOM) ---
 document.addEventListener("DOMContentLoaded", () => {
+  // --- REGISTRO DEL SERVICE WORKER (PWA) ---
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .then((reg) => console.log("Service Worker registrado con éxito:", reg.scope))
+        .catch((err) => console.error("Fallo al registrar Service Worker:", err));
+    });
+  }
+
+  // --- MANEJO DE INSTALACIÓN PERSONALIZADA PWA ---
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installCard = document.getElementById("pwa-install-card");
+    if (installCard) {
+      installCard.classList.remove("hidden-element");
+    }
+  });
+
+  const installBtn = document.getElementById("pwa-install-btn");
+  if (installBtn) {
+    installBtn.addEventListener("click", async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Usuario tomó la decisión de instalación: ${outcome}`);
+        deferredPrompt = null;
+        const installCard = document.getElementById("pwa-install-card");
+        if (installCard) {
+          installCard.classList.add("hidden-element");
+        }
+      }
+    });
+  }
+
+  // Detectar iOS para mostrar guía de instalación manual de Safari
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  if (isIOS && !isStandalone) {
+    const iosCard = document.getElementById("pwa-ios-card");
+    if (iosCard) {
+      iosCard.classList.remove("hidden-element");
+    }
+  }
+
+  // Ocultar tarjeta si ya se instaló la app
+  window.addEventListener("appinstalled", (evt) => {
+    console.log("METAR Entrenador instalado en el dispositivo.");
+    const installCard = document.getElementById("pwa-install-card");
+    if (installCard) {
+      installCard.classList.add("hidden-element");
+    }
+  });
+
   const quizEngine = new MetarQuiz();
   let currentParsedMetar = null;
 
