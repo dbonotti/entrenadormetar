@@ -1,7 +1,7 @@
 # 📡 METAR Decodificador & Entrenador 🪂
 ### ✈️ Brigada 2026 — Aeroclub Punta Alta
 
-Una aplicación web interactiva, moderna y móvil-first, diseñada especialmente para alumnos y pilotos de planeador del **Aeroclub Punta Alta**. Permite consultar reportes meteorológicos reales de aeródromos argentinos y decodificarlos interactivamente con explicaciones detalladas e instrumentación gráfica en tiempo real, además de contar con una academia de entrenamiento integrada para dominar la lectura de códigos meteorológicos aeronáuticos.
+Una aplicación web interactiva, moderna y móvil-first, diseñada en el marco del curso de piloto de planeador del **Aeroclub Punta Alta**. Permite consultar reportes meteorológicos reales de aeródromos argentinos y decodificarlos interactivamente con explicaciones detalladas e instrumentación gráfica en tiempo real, además de contar con un apartado de entrenamiento integrado para dominar la lectura de códigos meteorológicos aeronáuticos.
 
 ![Versión](https://img.shields.io/badge/Versión-v0.2-blue?style=flat-square)
 ![Stack](https://img.shields.io/badge/Stack-HTML5%20%7C%20CSS3%20%7C%20JS%20Vanilla-emerald?style=flat-square)
@@ -27,7 +27,7 @@ Para facilitar la visualización rápida de la meteorología, la aplicación ren
 * **Cielo & Capas de Nubes**: Grafica la cobertura nubosa real (FEW, SCT, BKN, OVC) posicionándolas en una escala vertical de altitud en pies. Cuenta con **gráficos especiales para nubes de peligro extremo como Cumulonimbus (CB)** (con forma de yunque y relámpagos) y **Towering Cumulus (TCU)**.
 * **Termómetro & Gradiente Térmico**: Muestra en paralelo la Temperatura y el Punto de Rocío. Incluye el cálculo de Humedad Relativa y emite una **Alerta de Niebla (Regla del Piloto)** si la diferencia (spread) es de 2°C o menos, advirtiendo de la formación inminente de niebla de radiación.
 
-### 4. 🎓 Academia METAR (Entrenador / Mini-juego)
+### 4. 🎓 Entrenador / Mini-juego
 * Pon a prueba tus conocimientos antes de volar. Presenta escenarios basados en reportes reales con preguntas de opción múltiple y preguntas táctiles de entrada escrita.
 * **Deletreo Fonético ICAO**: Incluye desafíos en los que debes deletrear códigos de estaciones aeronáuticas o fenómenos meteorológicos utilizando el alfabeto fonético aeronáutico internacional (ej. "SABE" $\rightarrow$ `Sierra-Alfa-Bravo-Eco`).
 * **Explicaciones Académicas**: Al responder, la aplicación te proporciona una explicación conceptual detallada del porqué de la respuesta para afianzar el aprendizaje.
