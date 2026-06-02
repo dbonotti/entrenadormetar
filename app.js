@@ -1379,10 +1379,61 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- REGISTRO DEL SERVICE WORKER (PWA) ---
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
+      const hadController = !!navigator.serviceWorker.controller;
+
       navigator.serviceWorker
-        .register("./sw.js")
-        .then((reg) => console.log("Service Worker registrado con éxito:", reg.scope))
+        .register("./sw.js", { updateViaCache: "none" })
+        .then((reg) => {
+          console.log("Service Worker registrado con éxito:", reg.scope);
+          
+          // Verificar actualizaciones de inmediato al cargar la app
+          reg.update();
+
+          // Buscar actualizaciones periódicamente cada 5 minutos
+          setInterval(() => {
+            reg.update();
+            console.log("[PWA] Verificando actualizaciones del Service Worker...");
+          }, 5 * 60 * 1000);
+        })
         .catch((err) => console.error("Fallo al registrar Service Worker:", err));
+
+      // Escuchar cuando el nuevo Service Worker toma el control (skipWaiting + claim)
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (hadController && !refreshing) {
+          refreshing = true;
+          showPwaUpdateToast();
+        }
+      });
+    });
+  }
+
+  // Función para mostrar el aviso de actualización
+  function showPwaUpdateToast() {
+    if (document.getElementById("pwa-update-toast")) return;
+
+    const toast = document.createElement("div");
+    toast.id = "pwa-update-toast";
+    toast.className = "update-toast";
+    toast.innerHTML = `
+      <div class="update-toast-icon">🔄</div>
+      <div class="update-toast-content">
+        <span class="update-toast-title">Nueva actualización disponible</span>
+        <span class="update-toast-desc">Toca actualizar para aplicar los cambios.</span>
+      </div>
+      <button class="update-toast-btn" id="pwa-update-reload-btn">Actualizar</button>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Animación de entrada
+    setTimeout(() => {
+      toast.classList.add("show");
+    }, 100);
+
+    const reloadBtn = document.getElementById("pwa-update-reload-btn");
+    reloadBtn.addEventListener("click", () => {
+      window.location.reload();
     });
   }
 
