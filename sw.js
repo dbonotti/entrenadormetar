@@ -42,7 +42,8 @@ self.addEventListener("fetch", (event) => {
   if (
     requestUrl.hostname.includes("aviationweather.gov") ||
     requestUrl.hostname.includes("codetabs.com") ||
-    requestUrl.hostname.includes("allorigins.win")
+    requestUrl.hostname.includes("allorigins.win") ||
+    requestUrl.hostname.includes("corsproxy.io")
   ) {
     event.respondWith(
       fetch(event.request)

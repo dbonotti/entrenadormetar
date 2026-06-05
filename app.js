@@ -1689,38 +1689,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Función auxiliar para consultar con reintentos utilizando proxies CORS redundantes
   async function fetchJsonWithFallback(targetUrl) {
-    // 1. Primer intento: api.codetabs.com (Proxy CORS muy rápido y confiable)
-    try {
-      const codetabsUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
-      const response = await fetch(codetabsUrl);
-      if (response.ok) {
-        return await response.json();
+    const proxies = [
+      // 1. corsproxy.io (Excelente soporte CORS en navegadores)
+      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      // 2. api.codetabs.com (Proxy de respaldo)
+      (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+      // 3. api.allorigins.win (Proxy de respaldo)
+      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      // 4. Consulta directa (En caso de que CORS esté desactivado o permitido)
+      (url) => url
+    ];
+
+    for (let i = 0; i < proxies.length; i++) {
+      try {
+        const proxiedUrl = proxies[i](targetUrl);
+        const response = await fetch(proxiedUrl);
+        if (response.ok) {
+          return await response.json();
+        }
+        console.warn(`Proxy ${i + 1} respondió con estado: ${response.status}`);
+      } catch (e) {
+        console.warn(`Fallo en proxy ${i + 1} para la URL: ${targetUrl}`, e);
       }
-    } catch (e) {
-      console.warn("Fallo en proxy CodeTabs, intentando AllOrigins...", e);
     }
 
-    // 2. Segundo intento: api.allorigins.win (Proxy CORS de respaldo)
-    try {
-      const allOriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-      const response = await fetch(allOriginsUrl);
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (e) {
-      console.warn("Fallo en proxy AllOrigins, intentando consulta directa...", e);
-    }
-
-    // 3. Tercer intento: Consulta directa (Por si acaso el entorno tiene CORS desactivado o permite peticiones directas)
-    try {
-      const response = await fetch(targetUrl);
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (e) {
-      console.error("Todos los intentos de conexión fallaron:", e);
-      throw e;
-    }
+    throw new Error("Todos los intentos de conexión y proxies CORS fallaron.");
   }
 
   // Consultar en NOAA API de forma remota utilizando proxies redundantes para garantizar estabilidad
