@@ -1704,8 +1704,18 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const proxiedUrl = proxies[i](targetUrl);
         const response = await fetch(proxiedUrl);
+        
+        // Si el estado es 204 (No Content), retornamos un arreglo vacío de inmediato
+        if (response.status === 204) {
+          return [];
+        }
+
         if (response.ok) {
-          return await response.json();
+          const text = await response.text();
+          if (!text || text.trim() === "") {
+            return []; // Evita errores si el cuerpo de la respuesta está vacío
+          }
+          return JSON.parse(text);
         }
         console.warn(`Proxy ${i + 1} respondió con estado: ${response.status}`);
       } catch (e) {
