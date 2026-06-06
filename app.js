@@ -690,11 +690,17 @@ class MetarParser {
     // IFR: Visib entre 1500m y 5000m OR Techo entre 500 y 1000 ft
     // LIFR: Visib < 1500m OR Techo < 500 ft
 
-    if (parsed.visib && parsed.visib.cavok) return "VFR";
+    let isCavok = !!(parsed.visib && parsed.visib.cavok);
 
     let vis = 9999;
     if (parsed.visib && typeof parsed.visib.value === "number") {
       vis = parsed.visib.value;
+    } else if (parsed.visib && typeof parsed.visib.value === "string") {
+      // Si la visibilidad es en millas terrestres (SM), intentar convertirla a metros aproximados para guardar coherencia
+      const smMatch = parsed.visib.value.match(/^(\d+)/);
+      if (smMatch) {
+        vis = Math.round(parseFloat(smMatch[1]) * 1609.34);
+      }
     }
 
     // Encontrar el techo (cloud ceiling: la capa más baja que sea BKN u OVC)
@@ -706,6 +712,15 @@ class MetarParser {
         }
       }
     });
+
+    // Guardar detalles calculados para su posterior explicación/decodificación
+    parsed.flightCategoryDetails = {
+      isCavok: isCavok,
+      visValue: vis,
+      ceilingValue: ceiling === 99999 ? null : ceiling
+    };
+
+    if (isCavok) return "VFR";
 
     if (vis < 1500 || ceiling < 500) {
       return "LIFR"; // Vuelo instrumental de muy bajo nivel. Peligro total para planeadores.
@@ -1777,8 +1792,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Identidad de estación
         const apt = MetarParser.findAirportByOaci(parsed.station);
-        document.getElementById("decoded-station-title").textContent = apt ? apt.name : `ESTACIÓN ${parsed.station}`;
+        const stationName = apt ? apt.name : `ESTACIÓN ${parsed.station}`;
+        document.getElementById("decoded-station-title").textContent = stationName;
         document.getElementById("decoded-station-subtitle").textContent = apt ? `${apt.city} • Región: ${apt.fir}` : `Código OACI: ${parsed.station}`;
+
+        // Explicación de categoría de vuelo
+        renderFlightCategoryExplanation(parsed, stationName);
 
         // 2. Tokenizador interactivo
         renderInteractiveTokens(parsed);
@@ -1864,6 +1883,46 @@ document.addEventListener("DOMContentLoaded", () => {
         span.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     });
+  }
+
+  function renderFlightCategoryExplanation(parsed, stationName) {
+    const infoCard = document.getElementById("flight-cat-info-card");
+    if (!infoCard) return;
+
+    const category = parsed.flightCategory;
+
+    let explanation = "";
+    
+    switch (category) {
+      case "VFR":
+        explanation = "VFR (Visual Flight Rules - Reglas de Vuelo Visual): Indica que la visibilidad horizontal es de 8 km o más y el techo de nubes está a 3000 pies o más. Se permite el vuelo visual sin requerir navegación instrumental.";
+        break;
+      case "MVFR":
+        explanation = "MVFR (Marginal Visual Flight Rules - Reglas de Vuelo Visual Marginal): La visibilidad está entre 5 y 8 km, o el techo de nubes se encuentra entre 1000 y 3000 pies. El vuelo visual está permitido, pero con un margen de seguridad reducido.";
+        break;
+      case "IFR":
+        explanation = "IFR (Instrument Flight Rules - Reglas de Vuelo Instrumental): La visibilidad horizontal está entre 1.5 y 5 km, o el techo de nubes es inferior a 1000 pies. Las operaciones requieren equipamiento instrumental y planes de vuelo IFR.";
+        break;
+      case "LIFR":
+        explanation = "LIFR (Low Instrument Flight Rules - Reglas de Vuelo Instrumental Bajo): Condiciones extremadamente adversas con visibilidad menor a 1.5 km o techo de nubes por debajo de 500 pies.";
+        break;
+      default:
+        explanation = "Categoría meteorológica no identificada.";
+    }
+
+    infoCard.innerHTML = `
+      <h2 class="card-title">🛡️ Categoría de Vuelo & Seguridad</h2>
+      <div class="flight-cat-summary">
+        <p style="font-size: 13px; color: var(--text-primary); margin-bottom: 12px; line-height: 1.5;">
+          Las condiciones meteorológicas actuales para <strong>${stationName}</strong> clasifican la estación en la categoría: 
+          <span class="flight-category-badge-inline cat-${category.toLowerCase()}">${category}</span>
+        </p>
+        
+        <div class="flight-cat-explanation-text" style="margin-bottom: 0;">
+          <strong>Definición:</strong> ${explanation}
+        </div>
+      </div>
+    `;
   }
 
   // --- CONTROLES DE NAVEGACIÓN Y TABS ---

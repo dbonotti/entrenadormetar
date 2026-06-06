@@ -106,6 +106,11 @@
           <div id="flight-cat-badge" class="flight-category-badge cat-vfr">VFR</div>
         </div>
 
+        <!-- Explicación de la Categoría de Vuelo -->
+        <div id="flight-cat-info-card" class="glass-card">
+          <!-- Se cargará dinámicamente con JS -->
+        </div>
+
         <!-- Visualizador interactivo de Tokens -->
         <div class="glass-card">
           <h2 class="card-title">🧩 Código METAR Interactivo</h2>
@@ -218,6 +223,49 @@
         <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
           Tabla de referencia rápida para recordar los códigos.
         </p>
+
+        <!-- Tabla comparativa de categorías de vuelo -->
+        <div class="flight-cat-table-card" style="margin-bottom: 24px;">
+          <h3 class="cheat-section-title" style="margin-bottom: 10px;">📋 Categorías de Vuelo (VFR, MVFR, IFR, LIFR)</h3>
+          <div class="flight-cat-table-container">
+            <table class="flight-cat-table">
+              <thead>
+                <tr>
+                  <th>Categoría</th>
+                  <th>Visibilidad</th>
+                  <th>Techo (BKN/OVC)</th>
+                  <th>Significado en Planeador</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge-table-inline cat-vfr">VFR</span></td>
+                  <td>&ge; 8 km</td>
+                  <td>&ge; 3000 ft</td>
+                  <td>Seguro / Apto para térmicas</td>
+                </tr>
+                <tr>
+                  <td><span class="badge-table-inline cat-mvfr">MVFR</span></td>
+                  <td>5 a 8 km</td>
+                  <td>1000 a 3000 ft</td>
+                  <td>Volar con precaución local</td>
+                </tr>
+                <tr>
+                  <td><span class="badge-table-inline cat-ifr">IFR</span></td>
+                  <td>1.5 a 5 km</td>
+                  <td>500 a 1000 ft</td>
+                  <td>Prohibido / Instrumental</td>
+                </tr>
+                <tr>
+                  <td><span class="badge-table-inline cat-lifr">LIFR</span></td>
+                  <td>&lt; 1.5 km</td>
+                  <td>&lt; 500 ft</td>
+                  <td>Peligro absoluto / Prohibido</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <!-- Buscador de la Guía -->
         <div class="search-wrapper" style="position: relative; margin-bottom: 20px;">

@@ -1099,3 +1099,228 @@ body {
   background: #f1f5f9;
   transform: scale(1.05);
 }
+
+/* --- EXPLICACIÓN DE CATEGORÍAS DE VUELO --- */
+.flight-category-badge-inline {
+  display: inline-block;
+  font-family: var(--font-header);
+  font-weight: 800;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-left: 4px;
+}
+
+.badge-table-inline {
+  display: inline-block;
+  font-family: var(--font-header);
+  font-weight: 800;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+  width: 55px;
+}
+
+.flight-cat-measurements {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+@media (min-width: 520px) {
+  .flight-cat-measurements {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.measurement-item {
+  background: #ffffff;
+  border: 1.5px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--transition-smooth);
+}
+
+.measurement-item:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.measurement-icon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+}
+
+.measurement-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.measurement-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.measurement-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 1px;
+}
+
+.flight-cat-explanation-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8fafc;
+  border-left: 4px solid #64748b;
+  border-radius: 0 10px 10px 0;
+}
+
+.flight-cat-glider-note {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.flight-cat-glider-note.border-vfr {
+  background: rgba(34, 197, 94, 0.07);
+  border: 1.5px solid rgba(34, 197, 94, 0.2);
+  border-left: 5px solid var(--color-vfr);
+  color: #14532d;
+}
+
+.flight-cat-glider-note.border-mvfr {
+  background: rgba(37, 99, 235, 0.07);
+  border: 1.5px solid rgba(37, 99, 235, 0.2);
+  border-left: 5px solid var(--color-mvfr);
+  color: #1e3a8a;
+}
+
+.flight-cat-glider-note.border-ifr {
+  background: rgba(220, 38, 38, 0.07);
+  border: 1.5px solid rgba(220, 38, 38, 0.2);
+  border-left: 5px solid var(--color-ifr);
+  color: #7f1d1d;
+}
+
+.flight-cat-glider-note.border-lifr {
+  background: rgba(147, 51, 234, 0.07);
+  border: 1.5px solid rgba(147, 51, 234, 0.2);
+  border-left: 5px solid var(--color-lifr);
+  color: #581c87;
+}
+
+.note-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.note-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.note-body strong {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+
+.flight-cat-table-details {
+  border-top: 1px solid var(--card-border);
+  padding-top: 14px;
+}
+
+.flight-cat-table-summary {
+  font-family: var(--font-header);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  padding: 6px 0;
+  transition: var(--transition-smooth);
+}
+
+.flight-cat-table-summary:hover {
+  opacity: 0.8;
+  transform: translateX(2px);
+}
+
+.flight-cat-table-container {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1.5px solid var(--card-border);
+  margin-top: 10px;
+}
+
+.flight-cat-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+  min-width: 450px;
+}
+
+.flight-cat-table th {
+  background: #f8fafc;
+  color: var(--text-secondary);
+  font-weight: 700;
+  padding: 10px;
+  border-bottom: 1.5px solid var(--card-border);
+}
+
+.flight-cat-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-primary);
+}
+
+.flight-cat-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.flight-cat-table tr.row-active-vfr {
+  background: rgba(34, 197, 94, 0.12) !important;
+  border-left: 3px solid var(--color-vfr);
+}
+
+.flight-cat-table tr.row-active-mvfr {
+  background: rgba(37, 99, 235, 0.12) !important;
+  border-left: 3px solid var(--color-mvfr);
+}
+
+.flight-cat-table tr.row-active-ifr {
+  background: rgba(220, 38, 38, 0.12) !important;
+  border-left: 3px solid var(--color-ifr);
+}
+
+.flight-cat-table tr.row-active-lifr {
+  background: rgba(147, 51, 234, 0.12) !important;
+  border-left: 3px solid var(--color-lifr);
+}
