@@ -1500,12 +1500,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const quizEngine = new MetarQuiz();
   let currentParsedMetar = null;
+  let activeAirportCard = null;
 
   // Cargar lista de aeropuertos en la interfaz
   const firSelect = document.getElementById("fir-select");
   const airportContainer = document.getElementById("airport-grid");
   const metarTextInput = document.getElementById("metar-manual-input");
   const decodeBtn = document.getElementById("decode-btn");
+  const refreshMetarBtn = document.getElementById("refresh-metar-btn");
+  const resetSearchBtn = document.getElementById("reset-search-btn");
+  const lastUpdateTimeDisplay = document.getElementById("last-update-time");
 
   // Control de Modo de Consulta (FIR vs Manual)
   const modeFirBtn = document.getElementById("mode-fir-btn");
@@ -1677,6 +1681,7 @@ document.addEventListener("DOMContentLoaded", () => {
   firSelect.addEventListener("change", () => {
     const selectedFir = firSelect.value;
     airportContainer.innerHTML = "";
+    activeAirportCard = null;
 
     if (selectedFir === "-1") return;
 
@@ -1693,6 +1698,13 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       card.addEventListener("click", () => {
+        // Resaltar la tarjeta seleccionada
+        if (activeAirportCard) {
+          activeAirportCard.classList.remove("selected");
+        }
+        card.classList.add("selected");
+        activeAirportCard = card;
+
         // Al hacer click, cargamos su OACI en la barra de consulta y fetch
         metarTextInput.value = apt.oaci;
         fetchLiveMetar(apt.oaci);
@@ -1773,6 +1785,47 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // --- CONTROL DE REFRESCAR Y REINICIAR BÚSQUEDA ---
+  refreshMetarBtn.addEventListener("click", () => {
+    if (currentParsedMetar && currentParsedMetar.station) {
+      // Si tenemos la estación OACI en el reporte activo, la re-consultamos desde NOAA en vivo
+      fetchLiveMetar(currentParsedMetar.station);
+    } else {
+      // Fallback: si es ingreso manual y no hay estación detectada, re-decodificamos el texto ingresado
+      const text = metarTextInput.value.trim();
+      if (text) {
+        decodeAndRenderMetar(text);
+      } else {
+        alert("No hay datos cargados para actualizar.");
+      }
+    }
+  });
+
+  resetSearchBtn.addEventListener("click", () => {
+    // 1. Ocultar sección de resultados con animación/clase
+    document.getElementById("output-section").classList.add("hidden-element");
+
+    // 2. Limpiar aeródromo seleccionado
+    if (activeAirportCard) {
+      activeAirportCard.classList.remove("selected");
+      activeAirportCard = null;
+    }
+
+    // 3. Resetear campos según el modo de consulta activo
+    if (modeFirBtn.classList.contains("active")) {
+      firSelect.value = "-1";
+      airportContainer.innerHTML = "";
+    } else {
+      metarTextInput.value = "";
+    }
+
+    // 4. Limpiar reporte actual en memoria
+    currentParsedMetar = null;
+
+    // 5. Scroll suave de regreso al inicio del buscador
+    document.getElementById("view-decode").scrollIntoView({ behavior: "smooth" });
+  });
+
   // Decodifica y renderiza todos los elementos y gráficos
   function decodeAndRenderMetar(metarString) {
     showLoading(true);
@@ -1784,6 +1837,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 1. Mostrar cabeceras y tarjetas
         document.getElementById("output-section").classList.remove("hidden-element");
+
+        // Actualizar hora de la obtención del reporte
+        const now = new Date();
+        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        lastUpdateTimeDisplay.textContent = `Obtenido: ${timeString}`;
 
         // Categoría de vuelo
         const catBadge = document.getElementById("flight-cat-badge");

@@ -1324,3 +1324,48 @@ body {
   background: rgba(147, 51, 234, 0.12) !important;
   border-left: 3px solid var(--color-lifr);
 }
+
+/* --- ESTILOS PARA ACTUALIZAR, REINICIAR Y SELECCIONAR AERODROMOS --- */
+.airport-pill-card.selected {
+  background: #dbeafe !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.result-actions-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.result-actions-bar button {
+  flex: 1;
+  padding: 12px 16px;
+  height: 48px;
+  font-size: 14px;
+}
+
+.last-update-time {
+  font-family: var(--font-header);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 480px) {
+  .result-actions-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .result-actions-bar button {
+    height: 44px;
+  }
+}
