@@ -3,7 +3,7 @@
 
 Una aplicación web interactiva, moderna y móvil-first, diseñada en el marco del curso de piloto de planeador del **Aeroclub Punta Alta**. Permite consultar reportes meteorológicos reales de aeródromos argentinos y decodificarlos interactivamente con explicaciones detalladas e instrumentación gráfica en tiempo real, además de contar con un apartado de entrenamiento integrado para dominar la lectura de códigos meteorológicos aeronáuticos.
 
-![Versión](https://img.shields.io/badge/Versión-v0.2-blue?style=flat-square)
+![Versión](https://img.shields.io/badge/Versión-v0.4.2-blue?style=flat-square)
 ![Stack](https://img.shields.io/badge/Stack-HTML5%20%7C%20CSS3%20%7C%20JS%20Vanilla-emerald?style=flat-square)
 ![Plataforma](https://img.shields.io/badge/Plataforma-Mobile--First%20%2F%20Web-orange?style=flat-square)
 

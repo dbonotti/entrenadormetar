@@ -1391,6 +1391,157 @@ class MetarQuiz {
 
 // --- GESTIÓN DE INTERFAZ Y ESTADO DE LA APP (DOM) ---
 document.addEventListener("DOMContentLoaded", () => {
+  // --- CONSTANTE DE VERSIÓN Y REGISTRO DE CAMBIOS ---
+  const APP_VERSION = "v0.4.2";
+  const APP_CHANGELOG = {
+    version: APP_VERSION,
+    date: "Octubre 2026",
+    items: [
+      {
+        icon: "📡",
+        title: "Consulta METAR en vivo restablecida",
+        desc: "Conexión directa mediante la API de VATSIM con soporte CORS nativo, respuesta ultrarrápida (~100 ms) y sin bloqueos de navegador."
+      },
+      {
+        icon: "🛡️",
+        title: "Redundancia y control de tiempos",
+        desc: "Integración de respaldo multicanal con NOAA y timeouts automáticos para evitar que la aplicación quede congelada."
+      },
+      {
+        icon: "⌨️",
+        title: "Detección rápida de códigos OACI",
+        desc: "En el modo manual, puedes ingresar simplemente el código de 4 letras (ej. SAEZ o SABE) y se consultará en vivo automáticamente."
+      },
+      {
+        icon: "✨",
+        title: "Feedback visual de actualización",
+        desc: "Notificación visual tras actualizar la PWA y panel de novedades al tocar la insignia de versión en la cabecera."
+      }
+    ]
+  };
+
+  // Modal interactivo de novedades (Changelog)
+  function openChangelogModal() {
+    let backdrop = document.getElementById("changelog-modal-backdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.id = "changelog-modal-backdrop";
+      backdrop.className = "changelog-modal-backdrop";
+
+      const itemsHtml = APP_CHANGELOG.items.map(it => `
+        <div class="changelog-item">
+          <span class="changelog-item-icon">${it.icon}</span>
+          <div class="changelog-item-text">
+            <strong>${it.title}</strong>
+            ${it.desc}
+          </div>
+        </div>
+      `).join("");
+
+      backdrop.innerHTML = `
+        <div class="changelog-modal-card" role="dialog" aria-modal="true" aria-labelledby="changelog-modal-title">
+          <div class="changelog-header">
+            <div class="changelog-title-group">
+              <h3 id="changelog-modal-title">🚀 Novedades del Entrenador</h3>
+              <span class="changelog-badge">${APP_CHANGELOG.version} • ${APP_CHANGELOG.date}</span>
+            </div>
+            <button class="changelog-close-btn" id="changelog-close-x" aria-label="Cerrar">&times;</button>
+          </div>
+          <div class="changelog-body">
+            ${itemsHtml}
+          </div>
+          <div class="changelog-footer">
+            <button class="changelog-confirm-btn" id="changelog-close-btn">¡Entendido, gracias!</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(backdrop);
+
+      const closeHandler = () => {
+        backdrop.classList.remove("show");
+        const versionBadge = document.getElementById("app-version-badge");
+        if (versionBadge) versionBadge.classList.remove("app-version-updated");
+      };
+
+      document.getElementById("changelog-close-x").addEventListener("click", closeHandler);
+      document.getElementById("changelog-close-btn").addEventListener("click", closeHandler);
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) closeHandler();
+      });
+    }
+
+    setTimeout(() => {
+      backdrop.classList.add("show");
+    }, 10);
+  }
+
+  // Toast de confirmación tras aplicar una actualización
+  function showUpdateSuccessToast(version) {
+    if (document.getElementById("pwa-success-toast")) return;
+
+    const toast = document.createElement("div");
+    toast.id = "pwa-success-toast";
+    toast.className = "update-toast update-success-toast";
+    toast.innerHTML = `
+      <div class="update-toast-icon">✅</div>
+      <div class="update-toast-content">
+        <span class="update-toast-title">¡Actualizado a ${version}!</span>
+        <span class="update-toast-desc">Las últimas mejoras ya están activas.</span>
+      </div>
+      <button class="update-toast-btn" id="pwa-success-news-btn">Novedades</button>
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add("show");
+    }, 200);
+
+    const newsBtn = document.getElementById("pwa-success-news-btn");
+    newsBtn.addEventListener("click", () => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 400);
+      openChangelogModal();
+    });
+
+    // Auto-ocultar tras 6 segundos
+    setTimeout(() => {
+      if (toast && toast.parentNode) {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 400);
+      }
+    }, 6000);
+  }
+
+  // Verificar si la app acaba de actualizarse para dar feedback al usuario
+  function checkPostUpdateFeedback() {
+    const lastVersion = localStorage.getItem("metar_installed_version");
+    const justUpdated = localStorage.getItem("metar_just_updated");
+
+    if (justUpdated || (lastVersion && lastVersion !== APP_VERSION)) {
+      showUpdateSuccessToast(APP_VERSION);
+      const versionBadge = document.getElementById("app-version-badge");
+      if (versionBadge) {
+        versionBadge.classList.add("app-version-updated");
+      }
+      localStorage.removeItem("metar_just_updated");
+    }
+
+    localStorage.setItem("metar_installed_version", APP_VERSION);
+  }
+
+  // Conectar evento al badge de versión
+  const versionBadge = document.getElementById("app-version-badge");
+  if (versionBadge) {
+    versionBadge.addEventListener("click", () => {
+      openChangelogModal();
+    });
+  }
+
+  // Ejecutar verificación post-actualización
+  checkPostUpdateFeedback();
+
   // --- REGISTRO DEL SERVICE WORKER (PWA) ---
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -1448,6 +1599,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const reloadBtn = document.getElementById("pwa-update-reload-btn");
     reloadBtn.addEventListener("click", () => {
+      localStorage.setItem("metar_just_updated", APP_VERSION);
       window.location.reload();
     });
   }

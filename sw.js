@@ -1,4 +1,4 @@
-const CACHE_NAME = "metar-entrenador-cache-v4";
+const CACHE_NAME = "metar-entrenador-cache-v0.4.2";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",

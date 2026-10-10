@@ -97,11 +97,37 @@ body {
   font-weight: 700;
   color: #1d4ed8;
   background: #dbeafe;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 6px;
-  border: 1px solid rgba(29, 78, 216, 0.15);
+  border: 1px solid rgba(29, 78, 216, 0.2);
   align-self: center;
   margin-top: 2px;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-version:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(29, 78, 216, 0.25);
+  border-color: #2563eb;
+}
+
+@keyframes versionPulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); border-color: #10b981; }
+  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); border-color: #10b981; }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.app-version-updated {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #10b981 !important;
+  animation: versionPulse 2.5s infinite;
 }
 
 .app-subtitle {
@@ -1098,6 +1124,179 @@ body {
 .update-toast-btn:hover {
   background: #f1f5f9;
   transform: scale(1.05);
+}
+
+/* Toast de éxito tras actualizar */
+.update-toast.update-success-toast {
+  background: #064e3b;
+  border: 1px solid #10b981;
+  box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.4), 0 8px 10px -6px rgba(16, 185, 129, 0.3);
+}
+
+.update-toast.update-success-toast .update-toast-icon {
+  animation: none;
+}
+
+.update-toast.update-success-toast .update-toast-desc {
+  color: #a7f3d0;
+}
+
+.update-toast.update-success-toast .update-toast-btn {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.update-toast.update-success-toast .update-toast-btn:hover {
+  background: #059669;
+}
+
+/* Modal de Novedades (Changelog) */
+.changelog-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.changelog-modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.changelog-modal-card {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.15);
+  border: 1.5px solid var(--card-border);
+  transform: translateY(20px) scale(0.96);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+}
+
+.changelog-modal-backdrop.show .changelog-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.changelog-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.changelog-title-group h3 {
+  font-family: var(--font-header);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.changelog-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-top: 4px;
+}
+
+.changelog-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: var(--transition-smooth);
+}
+
+.changelog-close-btn:hover {
+  background: #e2e8f0;
+  color: var(--text-primary);
+}
+
+.changelog-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.changelog-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.changelog-item-icon {
+  font-size: 20px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.changelog-item-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.changelog-item-text strong {
+  color: #0f172a;
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.changelog-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  justify-content: flex-end;
+  background: #fafafa;
+  border-radius: 0 0 16px 16px;
+}
+
+.changelog-confirm-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  font-family: var(--font-header);
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.changelog-confirm-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 /* --- EXPLICACIÓN DE CATEGORÍAS DE VUELO --- */
