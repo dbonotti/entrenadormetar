@@ -1714,64 +1714,82 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Función auxiliar para consultar con reintentos utilizando proxies CORS redundantes
-  async function fetchJsonWithFallback(targetUrl) {
-    const proxies = [
-      // 1. corsproxy.io (Excelente soporte CORS en navegadores)
-      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      // 2. api.codetabs.com (Proxy de respaldo)
-      (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-      // 3. api.allorigins.win (Proxy de respaldo)
-      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      // 4. Consulta directa (En caso de que CORS esté desactivado o permitido)
-      (url) => url
-    ];
-
-    for (let i = 0; i < proxies.length; i++) {
-      try {
-        const proxiedUrl = proxies[i](targetUrl);
-        const response = await fetch(proxiedUrl);
-        
-        // Si el estado es 204 (No Content), retornamos un arreglo vacío de inmediato
-        if (response.status === 204) {
-          return [];
-        }
-
-        if (response.ok) {
-          const text = await response.text();
-          if (!text || text.trim() === "") {
-            return []; // Evita errores si el cuerpo de la respuesta está vacío
-          }
-          return JSON.parse(text);
-        }
-        console.warn(`Proxy ${i + 1} respondió con estado: ${response.status}`);
-      } catch (e) {
-        console.warn(`Fallo en proxy ${i + 1} para la URL: ${targetUrl}`, e);
-      }
-    }
-
-    throw new Error("Todos los intentos de conexión y proxies CORS fallaron.");
-  }
-
-  // Consultar en NOAA API de forma remota utilizando proxies redundantes para garantizar estabilidad
+  // Consultar reporte METAR en tiempo real con proveedores redundantes y soporte CORS nativo
   async function fetchLiveMetar(oaciCode) {
+    const cleanOaci = oaciCode.trim().toUpperCase();
     showLoading(true);
+
     try {
-      const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${oaciCode.toUpperCase()}&format=json`;
+      let rawMetar = null;
 
-      const data = await fetchJsonWithFallback(targetUrl);
+      // 1. Proveedor principal: VATSIM METAR API (Soporta CORS nativo, respuesta ultrarrápida y datos globales reales en vivo)
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        const vatsimUrl = `https://metar.vatsim.net/${cleanOaci}`;
+        const res = await fetch(vatsimUrl, { signal: controller.signal, cache: "no-store" });
+        clearTimeout(timeoutId);
 
-      if (data && data.length > 0) {
-        const rawMetar = data[0].rawOb;
+        if (res.ok) {
+          const text = (await res.text()).trim();
+          if (text && text.length > 0 && !text.toLowerCase().includes("no metar available")) {
+            rawMetar = text;
+          }
+        }
+      } catch (err) {
+        console.warn("Fallo al consultar en proveedor principal (VATSIM):", err);
+      }
+
+      // 2. Proveedor secundario: NOAA / Aviation Weather Center API (Directo o vía proxies de respaldo con timeout controlado)
+      if (!rawMetar) {
+        const noaaUrl = `https://aviationweather.gov/api/data/metar?ids=${cleanOaci}&format=json`;
+        const candidateUrls = [
+          noaaUrl, // Directo (si CORS está permitido en el entorno actual)
+          `https://api.allorigins.win/raw?url=${encodeURIComponent(noaaUrl)}`,
+          `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(noaaUrl)}`
+        ];
+
+        for (const candidate of candidateUrls) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch(candidate, { signal: controller.signal, cache: "no-store" });
+            clearTimeout(timeoutId);
+
+            if (res.status === 204) {
+              break; // No Content para este aeródromo
+            }
+
+            if (res.ok) {
+              const text = await res.text();
+              if (text && text.trim()) {
+                const json = JSON.parse(text);
+                if (Array.isArray(json) && json.length > 0 && json[0].rawOb) {
+                  rawMetar = json[0].rawOb.trim();
+                  break;
+                }
+              }
+            }
+          } catch (e) {
+            console.warn(`Intento fallido en ${candidate}:`, e);
+          }
+        }
+      }
+
+      if (rawMetar && rawMetar.length > 0) {
+        // Asegurar que si el reporte no incluye 'METAR ' o 'SPECI ' al inicio, lo normalizamos
+        if (!rawMetar.startsWith("METAR ") && !rawMetar.startsWith("SPECI ")) {
+          rawMetar = `METAR ${rawMetar}`;
+        }
         metarTextInput.value = rawMetar;
         decodeAndRenderMetar(rawMetar);
       } else {
-        alert(`No se encontraron reportes en tiempo real para: ${oaciCode}. Intenta ingresar uno manual.`);
+        alert(`No se encontró reporte METAR en tiempo real para: ${cleanOaci}.\n\nEs posible que la estación meteorológica no transmita las 24 hs o esté fuera de servicio. Puedes ingresar un reporte manual para practicar.`);
         showLoading(false);
       }
     } catch (err) {
       console.error("Error al obtener METAR en vivo:", err);
-      alert("Hubo un error de conexión con la red al intentar obtener el reporte en vivo. Cambiando a entrada manual.");
+      alert("Hubo un error de conexión al intentar obtener el reporte en vivo. Verifica tu conexión a internet o ingresa un reporte manual.");
       showLoading(false);
     }
   }
@@ -1779,22 +1797,31 @@ document.addEventListener("DOMContentLoaded", () => {
   decodeBtn.addEventListener("click", () => {
     const text = metarTextInput.value.trim();
     if (text) {
-      decodeAndRenderMetar(text);
+      // Si el usuario ingresa únicamente un código OACI de 4 letras (ej: SAEZ, SABE), lo consultamos en vivo automáticamente
+      if (/^[A-Za-z]{4}$/.test(text)) {
+        fetchLiveMetar(text);
+      } else {
+        decodeAndRenderMetar(text);
+      }
     } else {
-      alert("Por favor ingresa un reporte METAR completo.");
+      alert("Por favor ingresa un reporte METAR completo o un código OACI.");
     }
   });
 
   // --- CONTROL DE REFRESCAR Y REINICIAR BÚSQUEDA ---
   refreshMetarBtn.addEventListener("click", () => {
     if (currentParsedMetar && currentParsedMetar.station) {
-      // Si tenemos la estación OACI en el reporte activo, la re-consultamos desde NOAA en vivo
+      // Si tenemos la estación OACI en el reporte activo, la re-consultamos en vivo
       fetchLiveMetar(currentParsedMetar.station);
     } else {
       // Fallback: si es ingreso manual y no hay estación detectada, re-decodificamos el texto ingresado
       const text = metarTextInput.value.trim();
       if (text) {
-        decodeAndRenderMetar(text);
+        if (/^[A-Za-z]{4}$/.test(text)) {
+          fetchLiveMetar(text);
+        } else {
+          decodeAndRenderMetar(text);
+        }
       } else {
         alert("No hay datos cargados para actualizar.");
       }

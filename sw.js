@@ -1,4 +1,4 @@
-const CACHE_NAME = "metar-entrenador-cache-v3";
+const CACHE_NAME = "metar-entrenador-cache-v4";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -40,8 +40,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
 
-  // Lógica especial para las APIs en tiempo real (NOAA y proxies CORS) -> Network-First
+  // Lógica especial para las APIs en tiempo real (VATSIM, NOAA y proxies) -> Network-First
   if (
+    requestUrl.hostname.includes("vatsim.net") ||
     requestUrl.hostname.includes("aviationweather.gov") ||
     requestUrl.hostname.includes("codetabs.com") ||
     requestUrl.hostname.includes("allorigins.win") ||
@@ -52,6 +53,12 @@ self.addEventListener("fetch", (event) => {
         .catch(() => {
           // Si falla la red en tiempo real, devolvemos una respuesta offline amigable
           console.log("[Service Worker] Real-time request failed, network offline");
+          if (requestUrl.hostname.includes("vatsim.net")) {
+            return new Response(
+              "METAR XXXX 000000Z 00000KT 0000 // //////// 00/00 Q0000 = OFFLINE",
+              { headers: { "Content-Type": "text/plain" } }
+            );
+          }
           return new Response(
             JSON.stringify([{
               rawOb: "METAR XXXX 000000Z 00000KT 0000 // //////// 00/00 Q0000 = OFFLINE - Reclama conexión para consultar aeródromos reales."
